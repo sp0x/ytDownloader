@@ -43,6 +43,10 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\yoump3\packages\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -62,7 +66,28 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.vb" />
+    <Compile Include="Extensions.vb" />
+    <Compile Include="Extraction\AacAudioExtractor.vb" />
+    <Compile Include="Extraction\AdaptiveType.vb" />
+    <Compile Include="Extraction\AudioDownloader.vb" />
+    <Compile Include="Extraction\AudioExtractionException.vb" />
+    <Compile Include="Extraction\AudioType.vb" />
+    <Compile Include="Extraction\BigEndianBitConverter.vb" />
+    <Compile Include="Extraction\BitHelper.vb" />
+    <Compile Include="Extraction\Downloader.vb" />
+    <Compile Include="Extraction\FlvFile.vb" />
+    <Compile Include="Extraction\HTMLEncoder.vb" />
+    <Compile Include="Extraction\IAudioExtractor.vb" />
+    <Compile Include="Extraction\MP3AudioExtractor.vb" />
+    <Compile Include="Extraction\ProgressEventArgs.vb" />
+    <Compile Include="Extraction\URLHelper.vb" />
+    <Compile Include="Extraction\VideoCodecInfo.vb" />
+    <Compile Include="Extraction\VideoDownloader.vb" />
+    <Compile Include="Extraction\VideoNotAvailableException.vb" />
+    <Compile Include="Extraction\VideoType.vb" />
+    <Compile Include="Extraction\YtParseException.vb" />
+    <Compile Include="Extraction\YtSignitureDecoder.vb" />
+    <Compile Include="Extraction\YtUrlDecoder.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -78,6 +103,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="STD.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -97,6 +123,7 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
