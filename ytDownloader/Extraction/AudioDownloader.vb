@@ -64,14 +64,14 @@ Namespace Extraction
             If Not Me._isCanceled Then
                 Me.ExtractAudio(tempPath)
             End If
-            Me.OnDownloadFinished(New IOFinishedEventArgs With {.Path = Me.AudioPath})
+            Me.OnDownloadFinished(New IOFinishedEventArgs With {.Path = Me.OutputPath})
         End Sub
 
 
         Protected Sub OnDownloadFinished(e As IOFinishedEventArgs)
             MyBase.RaiseDownloadFinished(Me, e)
         End Sub
-    
+
 
         ''' <summary>
         ''' Downloads the FLV.
@@ -95,10 +95,10 @@ Namespace Extraction
         ''' <param name="path">The path to the downloaded Flv file.</param>
         ''' <remarks></remarks>
         Private Sub ExtractAudio(path As String)
-            Using flvFile = New FlvFile(path, Me.AudioPath)
+            Using flvFile = New FlvFileParser(path, Me.OutputPath)
                 AddHandler flvFile.ConversionProgressChanged, _
                     Sub(sender As Object, e As ProgressEventArgs)
-                        RaiseEvent AudioExtractionProgressChanged(Me, New ProgressEventArgs(e.ProgressPercentage))
+                        RaiseEvent AudioExtractionProgressChanged(Me, e)
                     End Sub
                 flvFile.ExtractStreams()
             End Using

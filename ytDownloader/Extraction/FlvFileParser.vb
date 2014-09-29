@@ -23,15 +23,15 @@ Namespace Extraction
     ' Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     '
     ' ****************************************************************************
-    Friend Class FlvFile
+    Friend Class FlvFileParser
         Implements IDisposable
 #Region "Variables"
-        Private ReadOnly fileLength As Long
-        Private ReadOnly inputPath As String
-        Private ReadOnly outputPath As String
-        Private audioExtractor As IAudioExtractor
-        Private fileOffset As Long
-        Private fileStream As FileStream
+        Private ReadOnly _fileLength As Long
+        Private ReadOnly _inputPath As String
+        Private ReadOnly _outputPath As String
+        Private _audioExtractor As IAudioExtractor
+        Private _fileOffset As Long
+        Private _fileStream As FileStream
         Public Event ConversionProgressChanged As EventHandler(Of ProgressEventArgs)
         Public Property ExtractedAudio() As Boolean
 #End Region
@@ -43,11 +43,11 @@ Namespace Extraction
         ''' <param name="inputPath">The path of the input.</param>
         ''' <param name="outputPath">The path of the output without extension.</param>
         Public Sub New(inputPath As String, outputPath As String)
-            Me.inputPath = inputPath
-            Me.outputPath = outputPath
-            Me.fileStream = New FileStream(Me.inputPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024)
-            Me.fileOffset = 0
-            Me.fileLength = fileStream.Length
+            Me._inputPath = inputPath
+            Me._outputPath = outputPath
+            Me._fileStream = New FileStream(Me._inputPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024)
+            Me._fileOffset = 0
+            Me._fileLength = _fileStream.Length
         End Sub
 #End Region
 
@@ -58,18 +58,18 @@ Namespace Extraction
         End Sub
         Private Sub Dispose(disposing As Boolean)
             If disposing Then
-                If Not Me.fileStream Is Nothing Then
-                    Me.fileStream.Close()
-                    Me.fileStream = Nothing
+                If Not Me._fileStream Is Nothing Then
+                    Me._fileStream.Close()
+                    Me._fileStream = Nothing
                 End If
 
                 Me.CloseOutput(True)
             End If
         End Sub
         Private Sub CloseOutput(disposing As Boolean)
-            If audioExtractor Is Nothing Then Return
-            Dim fpath As String = audioExtractor.VideoStream.Name
-            If Not Me.audioExtractor Is Nothing Then
+            If _audioExtractor Is Nothing Then Return
+            Dim fpath As String = _audioExtractor.VideoStream.Name
+            If Not Me._audioExtractor Is Nothing Then
                 If Not disposing AndAlso fpath Is Nothing Then
                     Try
                         File.Delete(fpath)
@@ -77,8 +77,8 @@ Namespace Extraction
                     End Try
                 End If
 
-                Me.audioExtractor.Dispose()
-                Me.audioExtractor = Nothing
+                Me._audioExtractor.Dispose()
+                Me._audioExtractor = Nothing
             End If
         End Sub
 #End Region
@@ -97,18 +97,19 @@ Namespace Extraction
             Dim dataOffset As UInteger = Me.ReadUInt32()
             Me.Seek(dataOffset)
             Me.ReadUInt32()
-            While fileOffset < fileLength
+            While _fileOffset < _fileLength
                 If Not ReadTag() Then
                     Exit While
                 End If
-                If fileLength - fileOffset < 4 Then
+                If _fileLength - _fileOffset < 4 Then
                     Exit While
                 End If
 
                 Me.ReadUInt32()
 
-                Dim progress As Double = (Me.fileOffset * 1.0 / Me.fileLength) * 100
-                RaiseEvent ConversionProgressChanged(Me, New ProgressEventArgs(progress))
+                Dim progress As Double = (Me._fileOffset * 1.0 / Me._fileLength) * 100
+                Dim arg As New ProgressEventArgs(progress) With {.Flag = ProgressFlags.Extraction}
+                RaiseEvent ConversionProgressChanged(Me, arg)
             End While
 
             Me.CloseOutput(False)
@@ -125,9 +126,9 @@ Namespace Extraction
 
             Select Case format
                 Case 14, 2
-                    Return New Mp3AudioExtractor(Me.outputPath)
+                    Return New Mp3AudioExtractor(Me._outputPath)
                 Case 10
-                    Return New AacAudioExtractor(Me.outputPath)
+                    Return New AacAudioExtractor(Me._outputPath)
             End Select
 
             Dim typeStr As String
@@ -143,8 +144,8 @@ Namespace Extraction
         End Function
 
         Private Function ReadTag() As Boolean
-            If Me.fileLength - Me.fileOffset < 11 Then  Return False
-        
+            If Me._fileLength - Me._fileOffset < 11 Then Return False
+
             ' Read tag header
             Dim tagType As UInteger = ReadUInt8()
             Dim dataSize As UInteger = ReadUInt24()
@@ -155,7 +156,7 @@ Namespace Extraction
             ' Read tag data
             If dataSize = 0 Then Return True
 
-            If Me.fileLength - Me.fileOffset < dataSize Then
+            If Me._fileLength - Me._fileOffset < dataSize Then
                 Return False
             End If
 
@@ -165,15 +166,15 @@ Namespace Extraction
 
             If tagType = &H8 Then
                 ' If we have no audio writer, create one
-                If Me.audioExtractor Is Nothing Then
-                    Me.audioExtractor = Me.GetAudioWriter(mediaInfo)
-                    Me.ExtractedAudio = Me.audioExtractor IsNot Nothing
+                If Me._audioExtractor Is Nothing Then
+                    Me._audioExtractor = Me.GetAudioWriter(mediaInfo)
+                    Me.ExtractedAudio = Me._audioExtractor IsNot Nothing
                 End If
 
-                If Me.audioExtractor Is Nothing Then
+                If Me._audioExtractor Is Nothing Then
                     Throw New InvalidOperationException("No supported audio writer found.")
                 End If
-                Me.audioExtractor.WriteChunk(data, timeStamp)
+                Me._audioExtractor.WriteChunk(data, timeStamp)
             End If
 
             Return True
@@ -183,8 +184,8 @@ Namespace Extraction
         Private Function ReadBytes(length As Integer) As Byte()
             Dim buff As Byte() = New Byte(length - 1) {}
 
-            Me.fileStream.Read(buff, 0, length)
-            Me.fileOffset += length
+            Me._fileStream.Read(buff, 0, length)
+            Me._fileOffset += length
 
             Return buff
         End Function
@@ -192,8 +193,8 @@ Namespace Extraction
         Private Function ReadUInt24() As UInteger
             Dim x As Byte() = New Byte(4) {}
 
-            Me.fileStream.Read(x, 1, 3)
-            Me.fileOffset += 3
+            Me._fileStream.Read(x, 1, 3)
+            Me._fileOffset += 3
 
             Return BigEndianBitConverter.ToUInt32(x, 0)
         End Function
@@ -201,19 +202,19 @@ Namespace Extraction
         Private Function ReadUInt32() As UInteger
             Dim x As Byte() = New Byte(4) {}
 
-            Me.fileStream.Read(x, 0, 4)
-            Me.fileOffset += 4
+            Me._fileStream.Read(x, 0, 4)
+            Me._fileOffset += 4
 
             Return BigEndianBitConverter.ToUInt32(x, 0)
         End Function
 
         Private Function ReadUInt8() As UInteger
-            Me.fileOffset += 1
-            Return Me.fileStream.ReadByte()
+            Me._fileOffset += 1
+            Return Me._fileStream.ReadByte()
         End Function
         Private Sub Seek(offset As Long)
-            Me.fileStream.Seek(offset, SeekOrigin.Begin)
-            Me.fileOffset = offset
+            Me._fileStream.Seek(offset, SeekOrigin.Begin)
+            Me._fileOffset = offset
         End Sub
 #End Region
 

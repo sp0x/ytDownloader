@@ -74,12 +74,14 @@
     <Compile Include="Extraction\AudioType.vb" />
     <Compile Include="Extraction\BigEndianBitConverter.vb" />
     <Compile Include="Extraction\BitHelper.vb" />
+    <Compile Include="Extraction\Downloader.Factory.Vb" />
     <Compile Include="Extraction\Downloader.vb" />
-    <Compile Include="Extraction\FlvFile.vb" />
+    <Compile Include="Extraction\FlvFileParser.vb" />
     <Compile Include="Extraction\HTMLEncoder.vb" />
     <Compile Include="Extraction\IAudioExtractor.vb" />
     <Compile Include="Extraction\MP3AudioExtractor.vb" />
     <Compile Include="Extraction\ProgressEventArgs.vb" />
+    <Compile Include="Extraction\ProgressFlags.vb" />
     <Compile Include="Extraction\URLHelper.vb" />
     <Compile Include="Extraction\VideoCodecInfo.vb" />
     <Compile Include="Extraction\VideoDownloader.vb" />

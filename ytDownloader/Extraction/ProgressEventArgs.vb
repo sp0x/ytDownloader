@@ -1,4 +1,8 @@
 ﻿Namespace Extraction
+    ''' <summary>
+    ''' This class holds progress information and completion percentage.
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Class ProgressEventArgs
         Inherits EventArgs
 
@@ -18,7 +22,8 @@
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Property Flag As Int32
+        Public Property Flag As ProgressFlags
+
 
         Public Sub New(progressPercentage As Double)
             Me.ProgressPercentage = progressPercentage

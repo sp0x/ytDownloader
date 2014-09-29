@@ -88,9 +88,6 @@ Namespace Extraction
             Dim tmpBuff As Byte() = chunkBuffer.ToArray()
 
             Me.p_videoStream.Write(tmpBuff, 0, tmpBuff.Length)
-            'For Each chunk As Byte() In chunkBuffer
-            '    Me.fileStream.Write(chunk, 0, chunk.Length)
-            'Next
             chunkBuffer.Dispose()
             chunkBuffer = New MemoryStream() 'Me.chunkBuffer.Clear()
         End Sub
