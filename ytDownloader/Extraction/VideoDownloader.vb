@@ -17,7 +17,7 @@ Public Class VideoDownloader
         ''' <summary>
         ''' Occurs when the downlaod progress of the video file has changed.
         ''' </summary>
-        Public Event DownloadProgressChanged As EventHandler(Of ProgressEventArgs)
+        Public Shadows Event DownloadProgressChanged As EventHandler(Of ProgressEventArgs)
 
         ''' <summary>
         ''' Starts the video download.
@@ -45,16 +45,17 @@ Public Class VideoDownloader
                         Dim cancel As Boolean = False
                         Dim bytes As Integer
                         Dim copiedBytes As Integer = 0
+                        Dim argUpdate As New ProgressEventArgs(0)
+                        argUpdate.Flag = ProgressFlags.Download
 
                         While Not cancel AndAlso (inlineHelper(bytes, source.Read(buffer, 0, buffer.Length)) > 0)
                             target.Write(buffer, 0, bytes)
                             copiedBytes += bytes
-                            Trace.WriteLine(bytes)
-                            Dim eventArgs As New ProgressEventArgs((copiedBytes * 1.0 / response.ContentLength) * 100)
-                            eventArgs.Flag = ProgressFlags.Download
+                            argUpdate.ProgressPercentage = (copiedBytes * 1.0 / response.ContentLength) * 100
+                            RaiseEvent DownloadProgressChanged(Me, argUpdate)
+                            MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
 
-                            RaiseEvent DownloadProgressChanged(Me, eventArgs)
-                            If eventArgs.Cancel Then cancel = True
+                            cancel = argUpdate.Cancel
                         End While
                     End Using
                 End Using

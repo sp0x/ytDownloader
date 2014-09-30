@@ -8,7 +8,7 @@
                 dldr.VideoCodec = video
                 Return dldr
             End Function
-            Public Shared Function Create(url As String, outputFile As String, Optional bytesToDownload As Int32 = 0, Optional codecSelector As Func(Of VideoCodecInfo, Boolean) = Nothing)
+            Public Shared Function Create(ByVal url As String, ByVal outputFile As String, Optional ByVal bytesToDownload As Integer = 0, Optional ByVal codecSelector As Func(Of VideoCodecInfo, Boolean) = Nothing)
                 If String.IsNullOrEmpty(url) Then Throw New ArgumentNullException("url")
                 Dim vCodec As VideoCodecInfo = Nothing
                 Dim ytUrl As New YtUrlDecoder()
@@ -23,7 +23,8 @@
                 End If
                 Return Create(vCodec, outputFile, bytesToDownload)
             End Function
-            Public Shared Async Function CreateAsync(url As String, outputFile As String, Optional bytesToDownload As Int32 = 0, Optional codecSelector As Func(Of VideoCodecInfo, Boolean) = Nothing) As Task(Of AudioDownloader)
+            Public Shared Async Function CreateAsync(url As String, outputFile As String, Optional bytesToDownload As Int32 = 0, _
+                                                     Optional codecSelector As Func(Of VideoCodecInfo, Boolean) = Nothing) As Task(Of AudioDownloader)
                 Return Await Task.Factory.StartNew( _
                     Function()
                         Return Create(url, outputFile, bytesToDownload, codecSelector)

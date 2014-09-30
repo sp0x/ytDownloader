@@ -1,5 +1,7 @@
 ﻿Imports System.IO
 Imports System.Net
+Imports ytDownloader.Extraction.VideoParsers
+
 Namespace Extraction
 
     Public Class IoFinishedEventArgs
@@ -22,20 +24,6 @@ Namespace Extraction
         Inherits Downloader
         Private _isCanceled As Boolean
 
-        ' ''' <summary>
-        ' ''' Initializes a new instance of the <see cref="AudioDownloader"/> class.
-        ' ''' </summary>
-        ' ''' <param name="video">The video to convert.</param>
-        ' ''' <param name="savePath">The path to save the audio.</param>
-        ' ''' /// <param name="bytesToDownload">An optional value to limit the number of bytes to download.</param>
-        ' ''' <exception cref="ArgumentNullException"><paramref name="video"/> or <paramref name="savePath"/> is <c>null</c>.</exception>
-        'Public Sub New(video As VideoCodecInfo, savePath As String, Optional bytesToDownload As Int32 = Nothing)
-        '    MyBase.New(video, savePath, bytesToDownload)
-        'End Sub
-
-        'Public Sub New(videoUrl As String, savePath As String, Optional bytesToDownload As Int32 = Nothing)
-        '    MyBase.New(videoUrl, savePath, bytesToDownload)
-        'End Sub
 
 #Region "Events"
         ''' <summary>
@@ -45,7 +33,7 @@ Namespace Extraction
         ''' <summary>
         ''' Occurs when the download progress of the video file has changed.
         ''' </summary>
-        Public Event DownloadProgressChanged As EventHandler(Of ProgressEventArgs)
+        Public Shadows Event DownloadProgressChanged As EventHandler(Of ProgressEventArgs)
 #End Region
 
         ''' <summary>
@@ -56,7 +44,7 @@ Namespace Extraction
         ''' - or -
         ''' The audio file could not be created.
         ''' </exception>
-        ''' <exception cref="AudioExtractionException">An error occured during audio extraction.</exception>
+        ''' <exception cref="AudioExtractors.AudioExtractionException">An error occured during audio extraction.</exception>
         ''' <exception cref="WebException">An error occured while downloading the video.</exception>
         Public Overrides Sub StartDownloading()
             Dim tempPath As String = Path.GetTempFileName()
@@ -83,11 +71,11 @@ Namespace Extraction
             AddHandler videoDownloader.DownloadProgressChanged, _
                 Sub(sender As Object, e As ProgressEventArgs)
                     RaiseEvent DownloadProgressChanged(Me, e)
+                    MyBase.RaiseDownloadProgressChanged(Me, e)
                     Me._isCanceled = e.Cancel
                 End Sub
             videoDownloader.StartDownloading()
         End Sub
-
 
         ''' <summary>
         ''' Extracts the audio stream from a given F
@@ -95,10 +83,12 @@ Namespace Extraction
         ''' <param name="path">The path to the downloaded Flv file.</param>
         ''' <remarks></remarks>
         Private Sub ExtractAudio(path As String)
-            Using flvFile = New FlvFileParser(path, Me.OutputPath)
+            Me.OutputPath = System.IO.Path.ChangeExtension(OutputPath, VideoCodec.AudioExtension)
+            Using flvFile = New FlvFileParser(path, OutputPath)
                 AddHandler flvFile.ConversionProgressChanged, _
                     Sub(sender As Object, e As ProgressEventArgs)
                         RaiseEvent AudioExtractionProgressChanged(Me, e)
+                        MyBase.RaiseExtractionProgressChanged(Me, e)
                     End Sub
                 flvFile.ExtractStreams()
             End Using

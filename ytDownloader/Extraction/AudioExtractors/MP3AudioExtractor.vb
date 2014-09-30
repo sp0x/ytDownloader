@@ -1,18 +1,12 @@
 ﻿Imports System.Collections.Generic
 Imports System.IO
+Imports ytDownloader.Extraction.VideoParsers
 
 
-Namespace Extraction
-    Public Class MP3Frame
-        Public Property ChannelMode As Integer
-        Public Property BitRate As Integer
-        Public Property FirstFrameHeader As UInteger
-        Public Property MpegVersion As Integer
-        Public Property SampleRate As Integer
-    End Class
-
+Namespace Extraction.AudioExtractors
     Friend Class Mp3AudioExtractor
-        Implements IAudioExtractor
+        Inherits AudioChannelExtractor
+
 #Region "Static variables"
         Shared mpeg1BitRate As Integer() = New Int32() {0, 32, 40, 48, 56, 64, _
              80, 96, 112, 128, 160, 192, _
@@ -26,39 +20,26 @@ Namespace Extraction
 #End Region
 
 #Region "Variables"
-
-        Private chunkBuffer As MemoryStream ' List(Of Byte())
-        Private p_videoStream As FileStream
-        Private ReadOnly frameOffsets As List(Of UInteger)
+        Private frameOffsets As List(Of UInteger)
         Private ls_warnings As List(Of String)
-
-        Private hasVbrHeader As Boolean
-        Private isVbr As Boolean
-        Private FrameInfo As New MP3Frame
-        Private totalFrameLength As UInteger
-        Private doWriteVbrHeader As Boolean
-        Private delayWrite As Boolean
+        Private _hasVbrHeader As Boolean
+        Private _isVbr As Boolean
+        Private FrameInfo As New Mp3Frame
+        Private _totalFrameLength As UInteger
+        Private _doWriteVbrHeader As Boolean
+        Private _delayWrite As Boolean
 #End Region
 
 #Region "Construction"
         Public Sub New(path As String)
-            p_videoStream = New FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 64 * 1024)
+            MyBase.New(path)
             Me.ls_warnings = New List(Of String)()
-            Me.chunkBuffer = New MemoryStream
             Me.frameOffsets = New List(Of UInteger)()
-            Me.delayWrite = True
+            Me._delayWrite = True
         End Sub
 #End Region
 
 #Region "Props"
-        Public Property VideoStream As FileStream Implements IAudioExtractor.VideoStream
-            Get
-                Return p_videoStream
-            End Get
-            Set(value As FileStream)
-                p_videoStream = value
-            End Set
-        End Property
         Public ReadOnly Property Warnings() As IEnumerable(Of String)
             Get
                 Return Me.ls_warnings
@@ -66,46 +47,26 @@ Namespace Extraction
         End Property
 #End Region
 
-#Region "Freame writer"
+#Region "Frame writer"
         ''' <summary>
         ''' Writes the FLV Buffer, by extracting it to a MP3 Frame.
         ''' </summary>
         ''' <param name="chunk">The buffer to write</param>
         ''' <param name="timeStamp">Not used</param>
         ''' <remarks></remarks>
-        Public Sub WriteChunk(chunk As Byte(), timeStamp As UInteger) Implements IAudioExtractor.WriteChunk
-            Me.chunkBuffer.Write(chunk, 0, chunk.Length)
+        Public Overrides Sub WriteChunk(chunk As Byte(), timeStamp As UInteger)
+            Buffer.Write(chunk, 0, chunk.Length)
             Me.ParseMp3Frame(chunk)
-            If Me.delayWrite AndAlso Me.totalFrameLength >= 65536 Then
-                Me.delayWrite = False
+            If Me._delayWrite AndAlso Me._totalFrameLength >= 65536 Then
+                Me._delayWrite = False
             End If
-            If Not Me.delayWrite Then
-                Me.Flush()
+            If Not _delayWrite Then
+                Flush()
             End If
         End Sub
 
-        Private Sub Flush()
-            Dim tmpBuff As Byte() = chunkBuffer.ToArray()
-
-            Me.p_videoStream.Write(tmpBuff, 0, tmpBuff.Length)
-            chunkBuffer.Dispose()
-            chunkBuffer = New MemoryStream() 'Me.chunkBuffer.Clear()
-        End Sub
 #End Region
 
-#Region "Disposition"
-
-        Public Sub Dispose() Implements IDisposable.Dispose
-            Me.Flush()
-
-            If Me.doWriteVbrHeader Then
-                p_videoStream.Seek(0, SeekOrigin.Begin)
-                WriteVbrHeader(False)
-            End If
-
-            Me.p_videoStream.Dispose()
-        End Sub
-#End Region
 
 #Region "Helpers"
         Private Shared Function GetFrameDataOffset(mpegVersion As Integer, channelMode As Integer) As Integer
@@ -177,8 +138,8 @@ Namespace Extraction
                 If BigEndianBitConverter.ToUInt32(buffer, hdrOffset) = &H58696E67 Then
                     ' "Xing"
                     isVbrHeaderFrame = True
-                    mp3Extractor.delayWrite = False
-                    mp3Extractor.hasVbrHeader = True
+                    mp3Extractor._delayWrite = False
+                    mp3Extractor._hasVbrHeader = True
                 End If
             End If
             Return isVbrHeaderFrame
@@ -215,12 +176,12 @@ Namespace Extraction
                 ParseHeaderInformation(Me, offset, buffer, bitRate, mpegVersion, sampleRate, channelMode)
 
 
-                Me.frameOffsets.Add(Me.totalFrameLength + offset)
+                Me.frameOffsets.Add(Me._totalFrameLength + offset)
                 offset += frameLenght
                 length -= frameLenght
             End While
 
-            Me.totalFrameLength += buffer.Length
+            Me._totalFrameLength += buffer.Length
         End Sub
 
         Private Shared Sub ParseHeaderInformation(ByRef mp3Extractor As Mp3AudioExtractor, _
@@ -234,14 +195,14 @@ Namespace Extraction
                         .SampleRate = sampleRate
                         .ChannelMode = channelMode
                         .FirstFrameHeader = BigEndianBitConverter.ToUInt32(buffer, offset)
-                    ElseIf Not mp3Extractor.isVbr AndAlso bitrate <> .BitRate Then
-                        mp3Extractor.isVbr = True
+                    ElseIf Not mp3Extractor._isVbr AndAlso bitrate <> .BitRate Then
+                        mp3Extractor._isVbr = True
 
-                        If Not mp3Extractor.hasVbrHeader Then
-                            If mp3Extractor.delayWrite Then
+                        If Not mp3Extractor._hasVbrHeader Then
+                            If mp3Extractor._delayWrite Then
                                 mp3Extractor.WriteVbrHeader(True)
-                                mp3Extractor.doWriteVbrHeader = True
-                                mp3Extractor.delayWrite = False
+                                mp3Extractor._doWriteVbrHeader = True
+                                mp3Extractor._delayWrite = False
                             Else
                                 mp3Extractor.ls_warnings.Add("Detected VBR too late, cannot add VBR header.")
                             End If
@@ -263,19 +224,28 @@ Namespace Extraction
                 BitHelper.CopyBytes(buffer, dataOffset, BigEndianBitConverter.GetBytes(&H58696E67))
                 BitHelper.CopyBytes(buffer, dataOffset + 4, BigEndianBitConverter.GetBytes(&H7))
                 BitHelper.CopyBytes(buffer, dataOffset + 8, BigEndianBitConverter.GetBytes(frameOffsets.Count))
-                BitHelper.CopyBytes(buffer, dataOffset + 12, BigEndianBitConverter.GetBytes(totalFrameLength))
+                BitHelper.CopyBytes(buffer, dataOffset + 12, BigEndianBitConverter.GetBytes(_totalFrameLength))
 
                 For i As Int32 = 0 To 99
                     Dim frameIndex As Integer = ((i / 100.0) * Me.frameOffsets.Count)
-                    buffer(dataOffset + 16 + i) = (Me.frameOffsets(frameIndex) / Me.totalFrameLength * 256.0)
+                    buffer(dataOffset + 16 + i) = (Me.frameOffsets(frameIndex) / Me._totalFrameLength * 256.0)
                 Next
             End If
 
-            Me.p_videoStream.Write(buffer, 0, buffer.Length)
+            Output.Write(buffer, 0, buffer.Length)
+        End Sub
+#End Region
+
+#Region "Disposition"
+        Public Overloads Sub Dispose()
+            MyBase.Flush()
+            If Me._doWriteVbrHeader Then
+                Output.Seek(0, SeekOrigin.Begin)
+                WriteVbrHeader(False)
+            End If
+            MyBase.Dispose()
         End Sub
 #End Region
 
     End Class
-
-
 End Namespace

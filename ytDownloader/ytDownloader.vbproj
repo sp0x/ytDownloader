@@ -20,6 +20,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>ytDownloader.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -67,25 +68,31 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.vb" />
-    <Compile Include="Extraction\AacAudioExtractor.vb" />
+    <Compile Include="Extraction\AudioExtractors\AacAudioExtractor.vb" />
     <Compile Include="Extraction\AdaptiveType.vb" />
     <Compile Include="Extraction\AudioDownloader.vb" />
-    <Compile Include="Extraction\AudioExtractionException.vb" />
+    <Compile Include="Extraction\AudioExtractors\AudioChannelExtractor.vb" />
+    <Compile Include="Extraction\AudioExtractors\AudioExtractionException.vb" />
+    <Compile Include="Extraction\AudioExtractors\MP3Frame.vb" />
+    <Compile Include="Extraction\VideoParsers\StreamOutput.vb" />
     <Compile Include="Extraction\AudioType.vb" />
     <Compile Include="Extraction\BigEndianBitConverter.vb" />
     <Compile Include="Extraction\BitHelper.vb" />
     <Compile Include="Extraction\Downloader.Factory.Vb" />
     <Compile Include="Extraction\Downloader.vb" />
-    <Compile Include="Extraction\FlvFileParser.vb" />
+    <Compile Include="Extraction\VideoParsers\ChannelExtractor.vb" />
+    <Compile Include="Extraction\VideoParsers\FlvFileParser.vb" />
     <Compile Include="Extraction\HTMLEncoder.vb" />
-    <Compile Include="Extraction\IAudioExtractor.vb" />
-    <Compile Include="Extraction\MP3AudioExtractor.vb" />
+    <Compile Include="Extraction\AudioExtractors\IAudioExtractor.vb" />
+    <Compile Include="Extraction\AudioExtractors\MP3AudioExtractor.vb" />
     <Compile Include="Extraction\ProgressEventArgs.vb" />
     <Compile Include="Extraction\ProgressFlags.vb" />
     <Compile Include="Extraction\URLHelper.vb" />
     <Compile Include="Extraction\VideoCodecInfo.vb" />
     <Compile Include="Extraction\VideoDownloader.vb" />
     <Compile Include="Extraction\VideoNotAvailableException.vb" />
+    <Compile Include="Extraction\VideoParsers\IChannelExtractor.vb" />
+    <Compile Include="Extraction\VideoParsers\StreamInput.vb" />
     <Compile Include="Extraction\VideoType.vb" />
     <Compile Include="Extraction\YtParseException.vb" />
     <Compile Include="Extraction\YtSignitureDecoder.vb" />

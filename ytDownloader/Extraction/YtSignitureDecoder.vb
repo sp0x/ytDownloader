@@ -79,11 +79,12 @@ Namespace Extraction
                     Continue For
                 End If
             Next
-
             opcodes = opcodes.Trim()
+            Return opcodes
         End Function
 
         Private Shared Function DecipherWithOperations(cipher As String, operations As String) As String
+            If String.IsNullOrEmpty(operations) Then Return Nothing
             Return operations.Split({" "}, StringSplitOptions.RemoveEmptyEntries).Aggregate(cipher, AddressOf ApplyOperation)
         End Function
 

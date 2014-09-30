@@ -109,7 +109,6 @@ End Function
         '''and returns whether the normalization was successful or not.
         '''</summary>
         '''<param name="url">The YouTube URL to normalize.</param>
-        '''<param name="normalizedUrl">The normalized YouTube URL.</param>
         '''<returns>
         '''<c>true</c>, if the normalization was successful; <c>false</c>, if the URL is invalid.
         '''</returns>
