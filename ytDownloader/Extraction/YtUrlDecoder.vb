@@ -47,6 +47,7 @@ Namespace Extraction
             End If
         End Sub
 
+        Private Shared rxVideoId As New Regex("(watch\?v=)(.*?)(&|$)", RegexOptions.Compiled Or RegexOptions.IgnoreCase)
         ''' <summary>
         ''' Gets a list of <see cref="VideoCodecInfo" />s for the specified URL.
         ''' </summary>
@@ -69,13 +70,17 @@ Namespace Extraction
         ''' An error occurred while downloading the YouTube page html.
         ''' </exception>
         ''' <exception cref="YoutubeParseException">The Youtube page could not be parsed.</exception>
-        Public Function GetDownloadUrls(videoUrl As String, Optional decryptSignature As Boolean = True) As IEnumerable(Of VideoCodecInfo)
+        Public Function GetVideo(videoUrl As String, Optional decryptSignature As Boolean = True) As YtVideo
             If (videoUrl Is Nothing) Then Throw New ArgumentNullException("videoUrl")
             If (Not TryNormalizeYoutubeUrl(videoUrl)) Then
                 Throw New ArgumentException("URL is not a valid youtube URL!")
             End If
-            Try
+            Dim id As String = rxVideoId.MatchGroupValue(videoUrl, 2)
+            If id Is Nothing Then
+                Throw New ArgumentException("URL is not a valid youtube URL!")
+            End If
 
+            Try
                 Dim json = LoadYTPlayerJson(videoUrl)
                 Dim videoTitle As String = GetVideoTitle(json)
                 Dim downloadUrls As IEnumerable(Of ExtractionInfo) = ExtractDownloadUrls(json)
@@ -85,14 +90,37 @@ Namespace Extraction
                     info.HtmlPlayerVersion = htmlPlayerVersion
                     If (decryptSignature And info.RequiresDecryption) Then
                         DecryptDownloadUrl(info)
-                        End If
+                    End If
                 Next
-                Return infos
+                Return New YtVideo(id) With {.Codecs = infos}
             Catch ex As Exception
                 If (TypeOf ex Is WebException Or TypeOf ex Is VideoNotAvailableException) Then
                     Throw New Exception
                 End If
                 ThrowYoutubeParseException(ex, videoUrl)
+            End Try
+            Return Nothing
+        End Function
+
+        Public Function ParseVideoPage(videoPage As String, videoId As String, Optional decryptSignature As Boolean = True) As YtVideo
+            Try
+                Dim json = LoadYTPlayerJson("", videoPage)
+                Dim videoTitle As String = GetVideoTitle(json)
+                Dim downloadUrls As IEnumerable(Of ExtractionInfo) = ExtractDownloadUrls(json)
+                Dim infos As IEnumerable(Of VideoCodecInfo) = GetVideoInfos(downloadUrls, videoTitle).ToList()
+                Dim htmlPlayerVersion As String = GetHtml5PlayerVersion(json)
+                For Each info As VideoCodecInfo In infos
+                    info.HtmlPlayerVersion = htmlPlayerVersion
+                    If (decryptSignature And info.RequiresDecryption) Then
+                        DecryptDownloadUrl(info)
+                    End If
+                Next
+                Return New YtVideo(videoId) With {.Codecs = infos}
+            Catch ex As Exception
+                If (TypeOf ex Is WebException Or TypeOf ex Is VideoNotAvailableException) Then
+                    Throw New Exception
+                End If
+                ThrowYoutubeParseException(ex, "YtPlaylist")
             End Try
             Return Nothing
         End Function
@@ -128,6 +156,7 @@ End Function
                 Return False
             End If
             url = sprintf("http://youtube.com/watch?v={0}", v)
+            If query.Keys.Contains("list") Then url = String.Format("{0}&{1}={2}", url, "list", query("list"))
             Return True
         End Function
 
@@ -223,13 +252,15 @@ End Function
             Return If(title Is Nothing, "", title.ToString())
         End Function
 
-        Private Shared Function IsVideoUnavailable(pageSource As String) As Boolean
-            Dim unavailableContainer As String = "<div id=\""watch-player-unavailable\"">"""
+        Public Shared Function IsVideoUnavailable(pageSource As String) As Boolean
+            Const unavailableContainer As String = "<div id=\""watch-player-unavailable\"">"""
             Return pageSource.Contains(unavailableContainer)
         End Function
 
-        Private Shared Function LoadYTPlayerJson(url As String) As JObject
-            Dim pageSource As String = New WebClient() With {.Encoding = UTF8}.DownloadString(url) 'URLHelper.DldurlTxt(url, UTF8)
+        Private Shared Function LoadYTPlayerJson(url As String, Optional pageSource As String = Nothing) As JObject
+            If String.IsNullOrEmpty(pageSource) Then
+                pageSource = New WebClient() With {.Encoding = UTF8}.DownloadString(url) 'URLHelper.DldurlTxt(url, UTF8)
+            End If
             If String.IsNullOrEmpty(pageSource) Then
                 Throw New NullReferenceException("Could not fetch URL's content!")
                 Return Nothing

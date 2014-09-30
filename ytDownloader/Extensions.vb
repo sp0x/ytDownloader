@@ -2,7 +2,16 @@
 Imports System.Text
 Imports System.IO
 Imports System.Text.RegularExpressions
-
+Public Module RegexExtensions
+    <Extension>
+    Public Function MatchGroupValue(rx As Regex, input As String, group As Int32) As String
+        Dim rMtc As Match = rx.Match(input)
+        If rMtc IsNot Nothing Then
+            Return rMtc.Groups(group).Value
+        End If
+        Return Nothing
+    End Function
+End Module
 Public Module StringExtensions
     <Extension>
     Public Function RemoveIllegalPathCharacters(path As String) As String

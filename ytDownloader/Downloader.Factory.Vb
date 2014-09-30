@@ -9,14 +9,14 @@ Partial Public Class Downloader
             dldr.VideoCodec = video
             Return dldr
         End Function
-        Public Shared Function FetchCodecs(url As String) As IEnumerable(Of VideoCodecInfo)
+        Public Shared Function FetchVideo(url As String) As YtVideo
             Dim vCodec As VideoCodecInfo = Nothing
             Dim ytUrl As New YtUrlDecoder()
-            Return ytUrl.GetDownloadUrls(url)
-           End Function
+            Return ytUrl.GetVideo(url)
+        End Function
         Public Shared Function Create(url As String, outputFile As String, Optional bytesToDownload As Integer = 0, Optional codecSelector As Func(Of VideoCodecInfo, Boolean) = Nothing)
             If String.IsNullOrEmpty(url) Then Throw New ArgumentNullException("url")
-            Dim vModes As IEnumerable(Of VideoCodecInfo) = FetchCodecs(url)
+            Dim vModes As IEnumerable(Of VideoCodecInfo) = FetchVideo(url)
             Dim vCodec As VideoCodecInfo = Nothing
             If codecSelector Is Nothing Then
                 vCodec = (From xVideo In vModes Select xVideo Where xVideo.CanExtractAudio Order By xVideo.AudioBitrate Take 1).FirstOrDefault

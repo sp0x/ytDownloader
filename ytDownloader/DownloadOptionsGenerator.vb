@@ -26,9 +26,9 @@ Public Class DownloadOptionsBuilder
     ''' <remarks></remarks>
     Public Function GetDownloader() As Downloader
         'fetch the codecs, find the right one, create the downloader
-        Dim codecs = Downloader.Factory(Of VideoDownloader).FetchCodecs(Url)
+        Dim ytVid = Downloader.Factory(Of VideoDownloader).FetchVideo(Url)
         Dim filter = CompileCodecSelector()
-        Dim codec As VideoCodecInfo = codecs.FirstOrDefault(filter)
+        Dim codec As VideoCodecInfo = ytVid.Codecs.FirstOrDefault(filter)
         If codec Is Nothing Then
             Throw New VideoNotAvailableException("Can't find a codec matching the parameters!")
         End If

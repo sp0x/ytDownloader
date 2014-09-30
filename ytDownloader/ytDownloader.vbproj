@@ -87,6 +87,9 @@
     <Compile Include="Extraction\ProgressFlags.vb" />
     <Compile Include="Extraction\URLHelper.vb" />
     <Compile Include="Extraction\VideoCodecInfo.vb" />
+    <Compile Include="Extraction\YtPlaylist.vb" />
+    <Compile Include="Extraction\YtPlaylistEnumerator.vb" />
+    <Compile Include="Extraction\YtVideo.vb" />
     <Compile Include="IoFinishedEventArgs.vb" />
     <Compile Include="IoMode.vb" />
     <Compile Include="VideoDownloader.vb" />
