@@ -85,7 +85,7 @@ Namespace Extraction
                     info.HtmlPlayerVersion = htmlPlayerVersion
                     If (decryptSignature And info.RequiresDecryption) Then
                         DecryptDownloadUrl(info)
-                    End If
+                        End If
                 Next
                 Return infos
             Catch ex As Exception
@@ -212,7 +212,7 @@ End Function
                 Else
                     info = New VideoCodecInfo(formatCode) With {.DownloadUrl = extractionInfo.Uri.ToString()}
                 End If
-
+                info.DownloadUrl = URLHelper.LinkSetArg(info.DownloadUrl, "ratebypass", "yes")
                 downLoadInfos.Add(info)
             Next
             Return downLoadInfos

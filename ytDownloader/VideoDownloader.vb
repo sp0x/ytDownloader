@@ -1,6 +1,7 @@
 ﻿Imports System
 Imports System.IO
 Imports System.Net
+Imports System.Net.Sockets
 Imports ytDownloader.Extraction
 
 
@@ -35,6 +36,8 @@ Public Class VideoDownloader
 
         Dim request As HttpWebRequest = HttpWebRequest.Create(Me.VideoCodec.DownloadUrl)
         request.MaximumResponseHeadersLength = -1 'DownloadChunkSize
+        request.KeepAlive = True
+       
 
         If Me.BytesToDownload > 0 Then
             request.AddRange(0, Me.BytesToDownload.Value - 1)
@@ -50,15 +53,19 @@ Public Class VideoDownloader
                     Dim copiedBytes As Integer = 0
                     Dim argUpdate As New ProgressEventArgs(0)
                     argUpdate.Flag = ProgressFlags.Download
-
-                    While Not cancel AndAlso (STD.inlineHelper(bytes, source.Read(buffer, 0, buffer.Length)) > 0)
+                    bytes = source.Read(buffer, 0, buffer.Length)
+                    While Not cancel AndAlso bytes > 0
                         target.Write(buffer, 0, bytes)
                         copiedBytes += bytes
+                        If bytes = 65536 Then
+                            bytes = bytes
+                        End If
+                        'Console.WriteLine(bytes)
                         argUpdate.ProgressPercentage = (copiedBytes * 1.0 / response.ContentLength) * 100
                         RaiseEvent DownloadProgressChanged(Me, argUpdate)
                         MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
-
                         cancel = argUpdate.Cancel
+                        bytes = source.Read(buffer, 0, buffer.Length)
                     End While
                 End Using
             End Using

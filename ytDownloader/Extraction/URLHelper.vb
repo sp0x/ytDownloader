@@ -28,6 +28,30 @@ Friend Class URLHelper
         Return encoder.GetString(byts)
     End Function
 
+    Public Shared Function LinkSetArg(link As String, argument As String, setTo As String) As String
+        If link.Substring(link.IndexOf(argument) + argument.Length + 1).StartsWith("&") Then
+            link = link.Replace(argument & "=", argument & "=" & SetTo)
+        ElseIf (link.Substring(link.IndexOf(argument) + argument.Length + 1).StartsWith("&")) = False Then
+            If Not link.Contains(argument & "=") Then
+                link = LinkAddArg(link, argument, setTo)
+            Else
+                link = link.Replace(Split(link.Substring(link.IndexOf(argument & "=")), "&")(0), argument & "=" & setTo)
+            End If
+           End If
+        Return link
+    End Function
+    Public Shared Function LinkAddArg(url As String, arg As String, value As String) As String
+        Dim argCouple As String = String.Format("{0}={1}", arg, value)
+        If Not url.Contains("?") Then
+            url &= "?"
+            url &= argCouple
+        Else
+            url = String.Format("{0}{1}{2}", url, If(Not url.EndsWith("&"), "&", ""), argCouple)
+        End If
+        Return url
+    End Function
+
+
 
     Public Shared Function ParseQueryString(s As String) As IDictionary(Of String, String)
         ' remove anything other than query string from url
