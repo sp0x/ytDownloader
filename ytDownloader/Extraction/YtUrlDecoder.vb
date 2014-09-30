@@ -6,7 +6,7 @@ Imports System.Text.RegularExpressions
 Imports Newtonsoft.Json.Linq
 Imports ytDownloader.STD
 Imports ytDownloader.Extraction
-Imports ytDownloader.Extensions.UrlExtensions
+Imports ytDownloader.UrlExtensions
 
 Imports System.Text.Encoding
 

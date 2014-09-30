@@ -20,15 +20,16 @@ Namespace Extraction.VideoParsers
             Buffer = New MemoryStream
         End Sub
 
-#Region "Writing"
+     #Region "Writing"
         ''' <summary>
         ''' Flushes the buffer
         ''' </summary>
         ''' <remarks></remarks>
         Public Sub Flush()
-            'Dim tmpBuff As Byte() = Buffer.ToArray()
-            Buffer.CopyTo(Output)
-            'OutputStream.Write(tmpBuff, 0, tmpBuff.Length)
+            Dim tmpBuff As Byte() = Buffer.ToArray()
+            Output.Flush()
+            Output.Write(tmpBuff, 0, tmpBuff.Length)
+
             Buffer.Dispose()
             Buffer = New MemoryStream() 'Me.chunkBuffer.Clear()
         End Sub

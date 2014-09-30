@@ -56,7 +56,7 @@ Namespace Extraction.AudioExtractors
         ''' <remarks></remarks>
         Public Overrides Sub WriteChunk(chunk As Byte(), timeStamp As UInteger)
             Buffer.Write(chunk, 0, chunk.Length)
-            Me.ParseMp3Frame(chunk)
+            ParseMp3Frame(chunk)
             If Me._delayWrite AndAlso Me._totalFrameLength >= 65536 Then
                 Me._delayWrite = False
             End If
@@ -147,14 +147,14 @@ Namespace Extraction.AudioExtractors
 #End Region
 
 #Region "Parsing"
-        Private Sub ParseMp3Frame(buffer As Byte())
+        Private Sub ParseMp3Frame(bFrame As Byte())
             Dim offset As Integer = 0
-            Dim length As Integer = buffer.Length
+            Dim length As Integer = bFrame.Length
 
             While length >= 4
                 Dim mpegVersion, sampleRate, channelMode As Integer
                 Dim layer, bitRate, padding As Integer
-                Dim header As ULong = CULng(BigEndianBitConverter.ToUInt32(buffer, offset)) << 32
+                Dim header As ULong = CULng(BigEndianBitConverter.ToUInt32(bFrame, offset)) << 32
 
                 If BitHelper.Read(header, 11) <> &H7FF Then
                     Exit While
@@ -173,7 +173,7 @@ Namespace Extraction.AudioExtractors
                     Exit While
                 End If
 
-                ParseHeaderInformation(Me, offset, buffer, bitRate, mpegVersion, sampleRate, channelMode)
+                ParseHeaderInformation(Me, offset, bFrame, bitRate, mpegVersion, sampleRate, channelMode)
 
 
                 Me.frameOffsets.Add(Me._totalFrameLength + offset)
@@ -181,7 +181,7 @@ Namespace Extraction.AudioExtractors
                 length -= frameLenght
             End While
 
-            Me._totalFrameLength += buffer.Length
+            Me._totalFrameLength += bFrame.Length
         End Sub
 
         Private Shared Sub ParseHeaderInformation(ByRef mp3Extractor As Mp3AudioExtractor, _

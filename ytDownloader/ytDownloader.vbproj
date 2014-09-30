@@ -67,10 +67,11 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadOptionsGenerator.vb" />
     <Compile Include="Extensions.vb" />
     <Compile Include="Extraction\AudioExtractors\AacAudioExtractor.vb" />
     <Compile Include="Extraction\AdaptiveType.vb" />
-    <Compile Include="Extraction\AudioDownloader.vb" />
+    <Compile Include="AudioDownloader.vb" />
     <Compile Include="Extraction\AudioExtractors\AudioChannelExtractor.vb" />
     <Compile Include="Extraction\AudioExtractors\AudioExtractionException.vb" />
     <Compile Include="Extraction\AudioExtractors\MP3Frame.vb" />
@@ -78,8 +79,8 @@
     <Compile Include="Extraction\AudioType.vb" />
     <Compile Include="Extraction\BigEndianBitConverter.vb" />
     <Compile Include="Extraction\BitHelper.vb" />
-    <Compile Include="Extraction\Downloader.Factory.Vb" />
-    <Compile Include="Extraction\Downloader.vb" />
+    <Compile Include="Downloader.Factory.Vb" />
+    <Compile Include="Downloader.vb" />
     <Compile Include="Extraction\VideoParsers\ChannelExtractor.vb" />
     <Compile Include="Extraction\VideoParsers\FlvFileParser.vb" />
     <Compile Include="Extraction\HTMLEncoder.vb" />
@@ -89,7 +90,9 @@
     <Compile Include="Extraction\ProgressFlags.vb" />
     <Compile Include="Extraction\URLHelper.vb" />
     <Compile Include="Extraction\VideoCodecInfo.vb" />
-    <Compile Include="Extraction\VideoDownloader.vb" />
+    <Compile Include="IoFinishedEventArgs.vb" />
+    <Compile Include="IoMode.vb" />
+    <Compile Include="VideoDownloader.vb" />
     <Compile Include="Extraction\VideoNotAvailableException.vb" />
     <Compile Include="Extraction\VideoParsers\IChannelExtractor.vb" />
     <Compile Include="Extraction\VideoParsers\StreamInput.vb" />
