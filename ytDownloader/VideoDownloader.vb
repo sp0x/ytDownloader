@@ -10,7 +10,12 @@ Imports ytDownloader.Extraction
 Public Class VideoDownloader
     Inherits Downloader
     Public Const DownloadChunkSize As Int32 = 15 * 65536
-
+    Public Sub New(videoCodec As VideoCodecInfo)
+        MyBase.New()
+        Me.VideoCodec = videoCodec
+    End Sub
+    Public Sub New()
+    End Sub
 
     ''' <summary>
     ''' Occurs when the downlaod progress of the video file has changed.
@@ -22,11 +27,11 @@ Public Class VideoDownloader
     ''' </summary>
     ''' <exception cref="IOException">The video file could not be saved.</exception>
     ''' <exception cref="WebException">An error occured while downloading the video.</exception>
-    Public Overrides Sub StartDownloading()
-     If VideoCodec Is Nothing Then
+    Protected Overrides Sub StartDownloading()
+        If VideoCodec Is Nothing Then
             Throw New VideoNotAvailableException("Video codec not set")
         End If
-       MyBase.RaiseDownloadStarted(Me, EventArgs.Empty)
+        MyBase.RaiseDownloadStarted(Me, EventArgs.Empty)
 
         Dim request As HttpWebRequest = HttpWebRequest.Create(Me.VideoCodec.DownloadUrl)
         request.MaximumResponseHeadersLength = -1 'DownloadChunkSize

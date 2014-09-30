@@ -1,10 +1,13 @@
 ﻿Imports ytDownloader.Extraction
+Imports ytDownloader.StringExtensions
 
 
 ''' <summary>
 ''' Provides the base class for the <see cref="AudioDownloader"/> and <see cref="VideoDownloader"/> class.
 ''' </summary>
 Partial Public MustInherit Class Downloader
+
+#Region "Events"
     ''' <summary>
     ''' Occurs when the download finished.
     ''' </summary>
@@ -30,7 +33,9 @@ Partial Public MustInherit Class Downloader
     Protected Sub RaiseExtractionProgressChanged(sender As Object, e As ProgressEventArgs)
         RaiseEvent ExtractionProgressChanged(sender, e)
     End Sub
+#End Region
 
+#Region "Props"
 
     ''' <summary>
     ''' Gets the number of bytes to download. <c>null</c>, if everything is downloaded.
@@ -46,15 +51,28 @@ Partial Public MustInherit Class Downloader
     ''' Gets the video to download/convert.
     ''' </summary>
     Public Property VideoCodec() As VideoCodecInfo
+#End Region
+
 
     ''' <summary>
     ''' Starts the work of the <see cref="Downloader"/>.
     ''' </summary>
-    Public MustOverride Sub StartDownloading()
-    Public Overloads Async Sub StartDownloadingAsync()
-        Await Task.Factory.StartNew(AddressOf StartDownloading)
+    Protected MustOverride Sub StartDownloading()
+    Public Sub Start()
+        If String.IsNullOrEmpty(OutputPath) Then
+            OutputPath = VideoCodec.Title.RemoveIllegalPathCharacters
+            If TypeOf Me Is AudioDownloader Then
+                OutputPath &= VideoCodec.AudioExtension
+            Else
+                OutputPath &= VideoCodec.VideoExtension
+            End If
+        End If
+        StartDownloading()
+    End Sub
+    Public Overloads Async Sub StartAsync()
+        Await Task.Factory.StartNew(AddressOf Start)
     End Sub
     Public Overloads Sub StartDownloadingThreaded()
-        Task.Factory.StartNew(AddressOf StartDownloading)
+        Task.Factory.StartNew(AddressOf Start)
     End Sub
 End Class

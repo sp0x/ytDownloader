@@ -23,6 +23,13 @@ Public Class AudioDownloader
     Public Shadows Event DownloadProgressChanged As EventHandler(Of ProgressEventArgs)
 #End Region
 
+    Public Sub New()
+        MyBase.New()
+    End Sub
+    Public Sub New(videoCodec As VideoCodecInfo )
+        Me.VideoCodec = videoCodec
+    End Sub
+
     ''' <summary>
     ''' Downloads the video from YouTube and then extracts the audio track out if it.
     ''' </summary>
@@ -33,7 +40,7 @@ Public Class AudioDownloader
     ''' </exception>
     ''' <exception cref="AudioExtractors.AudioExtractionException">An error occured during audio extraction.</exception>
     ''' <exception cref="WebException">An error occured while downloading the video.</exception>
-    Public Overrides Sub StartDownloading()
+    Protected Overrides Sub StartDownloading()
         Dim tempPath As String = Path.GetTempFileName()
         Me.DownloadVideo(tempPath)
         If Not Me._isCanceled Then
@@ -61,7 +68,7 @@ Public Class AudioDownloader
                 MyBase.RaiseDownloadProgressChanged(Me, e)
                 Me._isCanceled = e.Cancel
             End Sub
-        videoDownloader.StartDownloading()
+        videoDownloader.Start()
     End Sub
 
     ''' <summary>

@@ -1,7 +1,16 @@
 ﻿Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports System.IO
+Imports System.Text.RegularExpressions
 
+Public Module StringExtensions
+    <Extension>
+    Public Function RemoveIllegalPathCharacters(path As String) As String
+        Dim regexSearch As String = New String(System.IO.Path.GetInvalidFileNameChars()) + New String(System.IO.Path.GetInvalidPathChars())
+        Dim r As New Regex(String.Format("[{0}]", Regex.Escape(regexSearch)))
+        Return r.Replace(path, "")
+    End Function
+End Module
 Public Module IOExtensions
     <Extension> _
     Public Sub CopyTo(ms As MemoryStream, toStream As Stream)
