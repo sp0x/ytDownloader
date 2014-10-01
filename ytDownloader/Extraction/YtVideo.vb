@@ -1,20 +1,28 @@
-﻿Namespace Extraction
+﻿Imports System.Text.RegularExpressions
+
+Namespace Extraction
     Public Class YtVideo
-        Public Id As String
+        Public Property Id As String
         Public Codecs As IEnumerable(Of VideoCodecInfo)
-        Public Sub New(id As String)
-            Me.Id = id
+        Public Shared ReadOnly RxVideoId As New Regex("(watch\?v=)(.*?)(&|$)", RegexOptions.Compiled Or RegexOptions.IgnoreCase)
+
+
+
+        Public Sub New(videoId As String)
+            Id = videoId
         End Sub
 
         Public Function GetCodecs() As IEnumerable(Of VideoCodecInfo)
-            Dim url As String = ToString()
-            Codecs = Downloader.Factory(Of AudioDownloader).FetchVideo(url)
+            Dim tmpVideo As YtVideo = Downloader.Factory(Of AudioDownloader).FetchVideo(ToString())
+            If tmpVideo Is Nothing Then Return Nothing
+            Codecs = tmpVideo.Codecs
             Return Codecs
         End Function
 
-        Public Function GetDownloader() As Downloader
-            If Codecs Is Nothing Then GetCodecs()
-
+        Public Function GetDownloader(options As DownloadOptions, Optional isPlaylist As Boolean = False) As Downloader
+            Dim result As Downloader = Downloader.Factory.Create(Me, options, isPlaylist)
+            result.InputUrl = ToString()
+            Return result
         End Function
 
         Public Overrides Function ToString() As String
@@ -24,8 +32,8 @@
             Return String.Format("https://www.youtube.com/watch?v={0}", Id)
         End Function
 
-        Public Sub StartDownload()
-            Throw New NotImplementedException()
-        End Sub
+        Public Shared Function GetVideoId(videoId As String) As String
+            Return RxVideoId.MatchGroupValue(videoId, 2)
+        End Function
     End Class
-End NameSpace
+End Namespace

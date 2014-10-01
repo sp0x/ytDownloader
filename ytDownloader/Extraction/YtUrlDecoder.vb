@@ -47,8 +47,7 @@ Namespace Extraction
             End If
         End Sub
 
-        Private Shared rxVideoId As New Regex("(watch\?v=)(.*?)(&|$)", RegexOptions.Compiled Or RegexOptions.IgnoreCase)
-        ''' <summary>
+      ''' <summary>
         ''' Gets a list of <see cref="VideoCodecInfo" />s for the specified URL.
         ''' </summary>
         ''' <param name="videoUrl">The URL of the YouTube video.</param>
@@ -75,7 +74,7 @@ Namespace Extraction
             If (Not TryNormalizeYoutubeUrl(videoUrl)) Then
                 Throw New ArgumentException("URL is not a valid youtube URL!")
             End If
-            Dim id As String = rxVideoId.MatchGroupValue(videoUrl, 2)
+            Dim id As String = YtVideo.GetVideoId(videoUrl)
             If id Is Nothing Then
                 Throw New ArgumentException("URL is not a valid youtube URL!")
             End If
@@ -215,7 +214,7 @@ End Function
         Private Shared Function GetStreamMap(json As JObject) As String
             Dim streamMap As JToken = json("args")("url_encoded_fmt_stream_map")
             Dim streamMapString As String = If(streamMap Is Nothing, Nothing, streamMap.ToString()) '' streamMap == null ? null : streamMap.ToString()
-            If (streamMapString Is Nothing Or streamMapString.Contains("been+removed")) Then
+            If (streamMapString Is Nothing OrElse streamMapString.Contains("been+removed")) Then
                 Throw New VideoNotAvailableException("Video is removed or has an age restriction.")
             End If
             Return streamMapString

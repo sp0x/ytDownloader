@@ -14,7 +14,7 @@ Namespace Extraction
         Public Property NextVideoId As String
         Public Property Index As Int32 = 0
         Private Property HttpClient As HttpWebRequest
-        Public Property DownloadOptions As DownloadOptionsBuilder
+        Public Property DownloadOptions As DownloadOptions
 
 #Region "Provates"
         Private _ytvCurrent As YtVideo
@@ -22,12 +22,12 @@ Namespace Extraction
 #End Region
 
 #Region "Regex"
-        Private Shared ReadOnly RxList As Regex = New Regex("(list=)(.*?)(&|$)", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
-        Private Shared ReadOnly RxVideoId As New Regex("(watch\?v=)(.*?)(&|$)", RegexOptions.Compiled Or RegexOptions.IgnoreCase)
+        Public Shared ReadOnly RxList As Regex = New Regex("(list=)(.*?)(&|$)", RegexOptions.IgnoreCase Or RegexOptions.Compiled)
+        Public Shared ReadOnly RxVideoId As New Regex("(watch\?v=)(.*?)(&|$)", RegexOptions.Compiled Or RegexOptions.IgnoreCase)
 #End Region
 
 
-        Public Sub New(url As String, Optional downloadOptionsBuilder As DownloadOptionsBuilder = Nothing)
+        Public Sub New(url As String, Optional downloadOptionsBuilder As DownloadOptions = Nothing)
             YtUrlDecoder.TryNormalizeYoutubeUrl(url)
             Id = RxList.MatchGroupValue(url, 2)
             If String.IsNullOrEmpty(Id) Then
@@ -55,7 +55,7 @@ Namespace Extraction
             Dim crVideoId As String
             If Index = 1 Then
                 videoSrc = downloadPage(OriginalUrl)
-              crVideoId = RxVideoId.MatchGroupValue(OriginalUrl, 2)
+                crVideoId = RxVideoId.MatchGroupValue(OriginalUrl, 2)
             Else 'On next video
                 crVideoId = NextVideoId
                 Dim tmpUrl As String = GetVideoListUrl(Id, crVideoId, Index)
