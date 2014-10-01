@@ -1,6 +1,21 @@
 ﻿Imports ytDownloader.Extraction
 
 Partial Public Class Downloader
+    Public Class Factory
+        Public Shared Function Create(options As DownloadOptions) As Downloader
+            Dim dldr As Downloader
+            If options.OnlyVideo Then
+                options.Output = System.IO.Path.ChangeExtension(options.Output, options.SelectedCodec.VideoExtension)
+                dldr = Factory(Of VideoDownloader).Create(options.SelectedCodec, options.Output)
+            Else
+                options.Output = System.IO.Path.ChangeExtension(options.Output, options.SelectedCodec.AudioExtension)
+                dldr = Factory(Of AudioDownloader).Create(options.SelectedCodec, options.Output)
+            End If
+            dldr.BytesToDownload = options.ByteLitmit
+            Return dldr
+        End Function
+    End Class
+
     Public Class Factory(Of TDldType As {Downloader, New})
         Public Shared Function Create(video As VideoCodecInfo, outputFile As String, Optional bytesToDownload As System.Nullable(Of Integer) = Nothing)
             Dim dldr As Downloader = New TDldType

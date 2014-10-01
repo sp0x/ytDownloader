@@ -1,24 +1,27 @@
 ﻿Imports ytDownloader.Extraction
 
 Public Class DownloadOptionsBuilder
-    Public Property OnlyVideo As Boolean
-    Public Property Format As String
-    Public Property Quality As Int32
-    Public Property Url As String
-    Public Property Output As String
+   
+    Public Function Build(videoUrl As String, outputPath As String, ByRef onlyvideo As Boolean, Optional format As String = "mp3", Optional quality As Int32 = 0) As DownloadOptions
+        Dim ytVid As YtVideo = Downloader.Factory(Of VideoDownloader).FetchVideo(videoUrl)
+        If {"flv", "mp4", "webm", "3gp"}.Contains(format) Then
+            onlyvideo = True
+        End If
+        Dim filter = CompileCodecSelector(onlyvideo, format, quality)
+        Dim codec As VideoCodecInfo = ytVid.Codecs.FirstOrDefault(filter)
+        If codec Is Nothing Then
+            Throw New VideoNotAvailableException("Can't find a codec matching the parameters!")
+        End If
+        If Not onlyvideo Then ' we're interesed when can we download an audio
+            onlyvideo = Not codec.CanExtractAudio ' Audio can't be extracted, so fetch the video only
+        End If
 
-    Public Sub New(ByRef onlyvideo As Boolean, Optional format As String = "mp3", Optional quality As Int32 = 0)
-        Me.OnlyVideo = onlyvideo
-        Me.Format = format
-        Me.Quality = quality
-    End Sub
-    Public Sub New(videoUrl As String, outputPath As String, ByRef onlyvideo As Boolean, Optional format As String = "mp3", Optional quality As Int32 = 0)
-        Url = videoUrl
-        Output = outputPath
-        Me.OnlyVideo = onlyvideo
-        Me.Format = format
-        Me.Quality = quality
-    End Sub
+        Dim resOptions As New DownloadOptions(videoUrl, outputPath, onlyvideo, format, quality)
+        resOptions.Filter = Me.CompileCodecSelector(onlyvideo, format, quality)
+        resOptions.SelectedCodec = codec
+        Return resOptions
+    End Function
+
     ''' <summary>
     ''' The most prefered way of getting a downloader.
     ''' </summary>
@@ -26,9 +29,13 @@ Public Class DownloadOptionsBuilder
     ''' <remarks></remarks>
     Public Function GetDownloader() As Downloader
         'fetch the codecs, find the right one, create the downloader
-        Dim ytVid = Downloader.Factory(Of VideoDownloader).FetchVideo(Url)
+
+        Dim ytVid As YtVideo = Downloader.Factory(Of VideoDownloader).FetchVideo(Url)
+        Dim downOps As DownloadOptions = Build(url)
         Dim filter = CompileCodecSelector()
         Dim codec As VideoCodecInfo = ytVid.Codecs.FirstOrDefault(filter)
+
+
         If codec Is Nothing Then
             Throw New VideoNotAvailableException("Can't find a codec matching the parameters!")
         End If
@@ -41,7 +48,6 @@ Public Class DownloadOptionsBuilder
             Output = System.IO.Path.ChangeExtension(Output, codec.VideoExtension)
             dldr = Downloader.Factory(Of VideoDownloader).Create(codec, Output)
         Else
-
             Output = System.IO.Path.ChangeExtension(Output, codec.AudioExtension)
             dldr = Downloader.Factory(Of AudioDownloader).Create(codec, Output)
         End If
@@ -53,12 +59,9 @@ Public Class DownloadOptionsBuilder
     ''' </summary>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function CompileCodecSelector() As Func(Of VideoCodecInfo, Boolean)
+    Public Function CompileCodecSelector(onlyVideo As Boolean, format As String, quality As Int32) As Func(Of VideoCodecInfo, Boolean)
         'If String.IsNullOrEmpty(format) Then format = "mp3"
-        If {"flv", "mp4", "webm", "3gp"}.Contains(format) Then
-            onlyvideo = True
-        End If
-        Dim onlyVideoBk As Boolean = onlyvideo
+        Dim onlyVideoBk As Boolean = OnlyVideo
         Return Function(vCodec)
                    Dim validCount = 0
                    Dim validsNeeded = 0

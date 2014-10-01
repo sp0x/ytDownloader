@@ -64,6 +64,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadOptions.vb" />
     <Compile Include="DownloadOptionsGenerator.vb" />
     <Compile Include="Extensions.vb" />
     <Compile Include="Extraction\AudioExtractors\AacAudioExtractor.vb" />

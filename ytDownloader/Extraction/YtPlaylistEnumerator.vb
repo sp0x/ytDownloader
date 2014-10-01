@@ -14,6 +14,7 @@ Namespace Extraction
         Public Property NextVideoId As String
         Public Property Index As Int32 = 0
         Private Property HttpClient As HttpWebRequest
+        Public Property DownloadOptions As DownloadOptionsBuilder
 
 #Region "Provates"
         Private _ytvCurrent As YtVideo
@@ -26,13 +27,14 @@ Namespace Extraction
 #End Region
 
 
-        Public Sub New(url As String)
+        Public Sub New(url As String, Optional downloadOptionsBuilder As DownloadOptionsBuilder = Nothing)
             YtUrlDecoder.TryNormalizeYoutubeUrl(url)
             Id = RxList.MatchGroupValue(url, 2)
             If String.IsNullOrEmpty(Id) Then
                 Throw New InvalidOperationException("Could not parse url, please check if it has list=? in it!")
             End If
             OriginalUrl = url
+            DownloadOptions = downloadOptionsBuilder
         End Sub
 
         Private Function downloadPage(url As String) As String

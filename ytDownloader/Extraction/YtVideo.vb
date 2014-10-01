@@ -12,11 +12,20 @@
             Return Codecs
         End Function
 
+        Public Function GetDownloader() As Downloader
+            If Codecs Is Nothing Then GetCodecs()
+
+        End Function
+
         Public Overrides Function ToString() As String
             If String.IsNullOrEmpty(Id) Then
                 Throw New InvalidOperationException("Video ID is null")
             End If
             Return String.Format("https://www.youtube.com/watch?v={0}", Id)
         End Function
+
+        Public Sub StartDownload()
+            Throw New NotImplementedException()
+        End Sub
     End Class
 End NameSpace
