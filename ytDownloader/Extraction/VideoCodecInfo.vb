@@ -218,8 +218,16 @@ Namespace Extraction
 
 
         Public Overrides Function ToString() As String
-            Return String.Format("Full Title: {0}, Type: {1}, Resolution: {2}p", Me.Title + Me.VideoExtension, Me.VideoType, Me.Resolution)
+            Return ToString(False)
         End Function
+        Public Overloads Function ToString(showExtension As Boolean)
+            If showExtension Then
+                Return String.Format("{0}, Type: {1}, Resolution: {2}p", Me.Title + Me.VideoExtension, Me.VideoType, Me.Resolution)
+            Else
+                Return String.Format("{0}, Type: {1}, Resolution: {2}p", Me.Title, Me.VideoType, Me.Resolution)
+            End If
+        End Function
+
     End Class
 
 

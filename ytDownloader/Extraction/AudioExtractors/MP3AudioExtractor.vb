@@ -8,15 +8,15 @@ Namespace Extraction.AudioExtractors
         Inherits AudioChannelExtractor
 
 #Region "Static variables"
-        Shared mpeg1BitRate As Integer() = New Int32() {0, 32, 40, 48, 56, 64, _
+        Shared ReadOnly Mpeg1BitRate As Integer() = New Int32() {0, 32, 40, 48, 56, 64, _
              80, 96, 112, 128, 160, 192, _
              224, 256, 320, 0}
-        Shared mpeg2XBitRate As Integer() = New Int32() {0, 8, 16, 24, 32, 40, _
+        Shared ReadOnly Mpeg2XBitRate As Integer() = New Int32() {0, 8, 16, 24, 32, 40, _
                 48, 56, 64, 80, 96, 112, _
                 128, 144, 160, 0}
-        Shared mpeg1SampleRate As Integer() = New Int32() {44100, 48000, 32000, 0}
-        Shared mpeg20SampleRate As Integer() = New Int32() {22050, 24000, 16000, 0}
-        Shared mpeg25SampleRate As Integer() = New Int32() {11025, 12000, 8000, 0}
+        Shared ReadOnly Mpeg1SampleRate As Integer() = New Int32() {44100, 48000, 32000, 0}
+        Shared ReadOnly Mpeg20SampleRate As Integer() = New Int32() {22050, 24000, 16000, 0}
+        Shared ReadOnly Mpeg25SampleRate As Integer() = New Int32() {11025, 12000, 8000, 0}
 #End Region
 
 #Region "Variables"

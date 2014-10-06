@@ -57,15 +57,17 @@ Public Class VideoDownloader
                     While Not cancel AndAlso bytes > 0
                         target.Write(buffer, 0, bytes)
                         copiedBytes += bytes
-                        If bytes = 65536 Then
-                            bytes = bytes
-                        End If
-                        'Console.WriteLine(bytes)
                         argUpdate.ProgressPercentage = (copiedBytes * 1.0 / response.ContentLength) * 100
-                        RaiseEvent DownloadProgressChanged(Me, argUpdate)
-                        MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
-                        cancel = argUpdate.Cancel
-                        bytes = source.Read(buffer, 0, buffer.Length)
+                        If IsUpdateReady(argUpdate) Then
+                            RaiseEvent DownloadProgressChanged(Me, argUpdate)
+                            MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
+                            cancel = argUpdate.Cancel
+                        End If
+                        If source.CanRead Then
+                            bytes = source.Read(buffer, 0, buffer.Length)
+                        Else
+                            bytes = 0
+                        End If
                     End While
                 End Using
             End Using

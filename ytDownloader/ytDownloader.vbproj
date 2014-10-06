@@ -48,6 +48,7 @@
       <HintPath>..\..\yoump3\packages\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -93,6 +94,7 @@
     <Compile Include="Extraction\YtVideo.vb" />
     <Compile Include="IoFinishedEventArgs.vb" />
     <Compile Include="IoMode.vb" />
+    <Compile Include="MustOverrideException.vb" />
     <Compile Include="VideoDownloader.vb" />
     <Compile Include="Extraction\VideoNotAvailableException.vb" />
     <Compile Include="Extraction\VideoParsers\IChannelExtractor.vb" />

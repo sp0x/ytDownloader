@@ -2,6 +2,7 @@
 Imports System.Text
 Imports System.IO
 Imports System.Text.RegularExpressions
+
 Public Module RegexExtensions
     <Extension>
     Public Function MatchGroupValue(rx As Regex, input As String, group As Int32) As String

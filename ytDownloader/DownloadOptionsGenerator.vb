@@ -7,15 +7,21 @@ Public Class DownloadOptionsBuilder
             onlyvideo = True
         End If
         Dim resOptions As New DownloadOptions(outputPath, onlyvideo, format, quality)
-        resOptions.Filter = CompileCodecSelector(onlyvideo, format, quality)
+
+        Dim tmpQual As Int32 = quality
+        If quality = -1 Or quality = Int32.MaxValue Then tmpQual = 0
+        resOptions.Filter = CompileCodecSelector(onlyvideo, format, tmpQual)
         Return resOptions
     End Function
 
-    ''' <summary>
-    ''' Creates a predicate for the filtering of available video codecs.
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
+
+
+
+            ''' <summary>
+            ''' Creates a predicate for the filtering of available video codecs.
+            ''' </summary>
+            ''' <returns></returns>
+            ''' <remarks></remarks>
     Public Shared Function CompileCodecSelector(onlyVideo As Boolean, format As String, quality As Int32) As Func(Of VideoCodecInfo, Boolean)
         'If String.IsNullOrEmpty(format) Then format = "mp3"
         Dim onlyVideoBk As Boolean = onlyVideo
@@ -37,12 +43,19 @@ Public Class DownloadOptionsBuilder
                            validCount += 1
                        End If
                        validsNeeded += 1
+
                    ElseIf (quality > 0) Then
                        If (vCodec.Resolution = CInt(quality)) Then
                            validCount += 1
                        End If
                        validsNeeded += 1
+                   ElseIf quality = -1 Then
+                       ' Select highest quality
+                       Throw New NotImplementedException("Highest quality can not be selected from within the filter.")
+                   Else
+                       Return True
                    End If
+
                    Return (validsNeeded > 0 AndAlso validCount = validsNeeded)
                End Function
     End Function

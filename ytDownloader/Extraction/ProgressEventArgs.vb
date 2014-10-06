@@ -5,7 +5,7 @@
     ''' <remarks></remarks>
     Public Class ProgressEventArgs
         Inherits EventArgs
-
+        Public Property IsReady As Boolean
         ''' <summary>
         ''' Gets or sets a token whether the operation that reports the progress should be canceled.
         ''' </summary>
@@ -23,7 +23,9 @@
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Property Flag As ProgressFlags
-
+        Public Function GetStatusString(title As String)
+            Return String.Format("%{0:F2} {1}", ProgressPercentage, title)
+        End Function
 
         Public Sub New(progressPercentage As Double)
             Me.ProgressPercentage = progressPercentage

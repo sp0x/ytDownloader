@@ -64,9 +64,12 @@ Public Class AudioDownloader
         Dim videoDownloader As VideoDownloader = Factory(Of VideoDownloader).Create(Me.VideoCodec, path, Me.BytesToDownload)
         AddHandler videoDownloader.DownloadProgressChanged, _
             Sub(sender As Object, e As ProgressEventArgs)
-                RaiseEvent DownloadProgressChanged(Me, e)
-                MyBase.RaiseDownloadProgressChanged(Me, e)
-                Me._isCanceled = e.Cancel
+                If IsUpdateReady(e) Then
+                    e.IsReady = True
+                    RaiseEvent DownloadProgressChanged(Me, e)
+                    MyBase.RaiseDownloadProgressChanged(Me, e)
+                    Me._isCanceled = e.Cancel
+                End If
             End Sub
         videoDownloader.Start()
     End Sub
@@ -80,8 +83,10 @@ Public Class AudioDownloader
       Using flvFile = New FlvFileParser(path, OutputPath)
             AddHandler flvFile.ConversionProgressChanged, _
                 Sub(sender As Object, e As ProgressEventArgs)
-                    RaiseEvent AudioExtractionProgressChanged(Me, e)
-                    MyBase.RaiseExtractionProgressChanged(Me, e)
+                    If IsUpdateReady(e) Then
+                        RaiseEvent AudioExtractionProgressChanged(Me, e)
+                        MyBase.RaiseExtractionProgressChanged(Me, e)
+                    End If
                 End Sub
             flvFile.ExtractStreams()
         End Using

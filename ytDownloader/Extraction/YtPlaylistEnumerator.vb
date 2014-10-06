@@ -1,10 +1,6 @@
 ﻿Imports System.Text.RegularExpressions
 Imports System.Net
-Imports System.Security.Policy
-Imports System.Text.Encoding
 Imports System.IO
-Imports ytDownloader.RegexExtensions
-
 
 Namespace Extraction
     Public Class YtPlaylistEnumerator
@@ -12,6 +8,10 @@ Namespace Extraction
         Public Property Id As String
         Public Property OriginalUrl As String
         Public Property NextVideoId As String
+        Public Property NextVideosQue As New Queue(Of String)
+        Private Property Cookies As New CookieContainer
+
+
         Public Property Index As Int32 = 0
         Private Property HttpClient As HttpWebRequest
         Public Property DownloadOptions As DownloadOptions
@@ -39,46 +39,68 @@ Namespace Extraction
 
         Private Function downloadPage(url As String) As String
             HttpClient = HttpWebRequest.Create(url)
+            HttpClient.CookieContainer = Cookies
             HttpClient.Headers(HttpRequestHeader.AcceptEncoding) = "gzip, deflate"
             Dim respStrm As stream = HttpClient.GetResponse.GetResponseStream
             Return New StreamReader(respStrm).ReadToEnd()
         End Function
 
-
-
-        ' (watch\?v=)(.*)?&(&amp;list=)(listId)(&amp;index=)(\d)
+        ''' <summary>
+        ''' Iterates through each video. Caches with a range of 25(defined by youtube) so it doesn't do double requests.
+        ''' Each video is just a new video with it's ID.
+        ''' </summary>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
         Public Function MoveNext() As Boolean Implements IEnumerator.MoveNext
             Index += 1
-            Dim rxNextVideo As Regex
-
             Dim videoSrc As String
             Dim crVideoId As String
-            If Index = 1 Then
+
+            If Index = 1 And NextVideosQue.Count = 0 Then
                 videoSrc = downloadPage(OriginalUrl)
                 crVideoId = RxVideoId.MatchGroupValue(OriginalUrl, 2)
             Else 'On next video
-                crVideoId = NextVideoId
-                Dim tmpUrl As String = GetVideoListUrl(Id, crVideoId, Index)
-                videoSrc = downloadPage(tmpUrl)
+                crVideoId = NextVideosQue.Dequeue
+                If NextVideosQue.Count = 0 Then
+                    'Next videos needs to be fetched
+                    Dim tmpUrl As String = GetVideoListUrl(Id, crVideoId, Index)
+                    videoSrc = downloadPage(tmpUrl)
+                End If
             End If
             'Next videoId must be kept
 
-            If String.IsNullOrEmpty(videoSrc) Then
+            If String.IsNullOrEmpty(videoSrc) And NextVideosQue.Count = 0 Then
                 Throw New NullReferenceException("Could not fetch URL's content!")
-            End If
-            If (YtUrlDecoder.IsVideoUnavailable(videoSrc)) Then
-                Throw New VideoNotAvailableException()
+            ElseIf Not String.IsNullOrEmpty(videoSrc) Then
+                If (YtUrlDecoder.IsVideoUnavailable(videoSrc)) Then Throw New VideoNotAvailableException()
+                If NextVideosQue.Count = 0 Then
+                    ExtractNextVIds(videoSrc)
+                End If
             End If
 
-            rxNextVideo = GenNextVideoRegex(Id, Index)
-            NextVideoId = rxNextVideo.MatchGroupValue(videoSrc, 2)
+
             If String.IsNullOrEmpty(NextVideoId) Then
                 Return False
             Else
-                _ytvCurrent = New YtVideo(crVideoId) '_ytuDecoder.ParseVideoPage(videoSrc, crVideoId)
+                _ytvCurrent = New YtVideo(crVideoId) '
                 Return True
             End If
         End Function
+
+        Private Sub ExtractNextVIds(videoSrc As String)
+            Dim rxNextVideo As Regex
+            Dim ixTmp As Int32 = Index
+            rxNextVideo = GenNextVideoRegex(Id, Index)
+            NextVideoId = rxNextVideo.MatchGroupValue(videoSrc, 2)
+            Dim tmpNextVideoId As String = NextVideoId
+            ''Builds a stack of the next visible URL's
+            Do
+                NextVideosQue.Enqueue(tmpNextVideoId)
+                ixTmp += 1
+                rxNextVideo = GenNextVideoRegex(Id, ixTmp)
+                tmpNextVideoId = rxNextVideo.MatchGroupValue(videoSrc, 2)
+            Loop While Not String.IsNullOrEmpty(tmpNextVideoId)
+        End Sub
 
         Public Sub Reset() Implements IEnumerator.Reset
             Index = 1
