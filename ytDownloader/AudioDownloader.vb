@@ -61,7 +61,7 @@ Public Class AudioDownloader
     ''' <param name="path">The path where it should be saved</param>
     ''' <remarks></remarks>
     Private Sub DownloadVideo(path As String)
-        Dim videoDownloader As VideoDownloader = Factory(Of VideoDownloader).Create(Me.VideoCodec, path, Me.BytesToDownload)
+        Dim videoDownloader As VideoDownloader = Factory(Of VideoDownloader).Create(Me.VideoCodec, path, Options.SizeLimit)
         AddHandler videoDownloader.DownloadProgressChanged, _
             Sub(sender As Object, e As ProgressEventArgs)
                 If IsUpdateReady(e) Then

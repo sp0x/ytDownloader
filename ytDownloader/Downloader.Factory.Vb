@@ -9,13 +9,11 @@ Partial Public Class Downloader
             ops.IsPlaylist = isPlaylist
 
             If ops.OnlyVideo Then
-                If Not isPlaylist And codec IsNot Nothing Then ops.Output = System.IO.Path.ChangeExtension(ops.Output, codec.AudioExtension)
                 downloader = Factory(Of VideoDownloader).Create(codec, ops.Output)
             Else
-                If Not isPlaylist Then ops.Output = System.IO.Path.ChangeExtension(ops.Output, codec.AudioExtension)
                 downloader = Factory(Of AudioDownloader).Create(codec, ops.Output)
             End If
-            downloader.BytesToDownload = ops.SizeLimit
+
             downloader.IsPlaylistMember = isPlaylist
             downloader.SetInitialized(True)
             Return downloader
@@ -108,11 +106,24 @@ Partial Public Class Downloader
         Public Shared Function Create(video As VideoCodecInfo, outputFile As String, Optional bytesToDownload As System.Nullable(Of Integer) = Nothing, _
                                       Optional isPlaylsit As Boolean = False) As TDldType
             Dim dldr As Downloader = New TDldType
+            dldr.Options = New DownloadOptions
+            dldr.Options.SizeLimit = bytesToDownload
             dldr.OutputPath = outputFile
-            dldr.BytesToDownload = bytesToDownload
             dldr.VideoCodec = video
             Return dldr
         End Function
+        ''' <summary>
+        ''' Modifies the type of the downloader, and keeps it's options
+        ''' </summary>
+        ''' <param name="dldr"></param>
+        ''' <remarks></remarks>
+        Public Shared Sub SetExtendor(ByRef dldr As Downloader)
+            Dim tmpCopy As Downloader = dldr.Clone()
+            dldr = New TDldType
+            tmpCopy.CloneMembersTo(dldr)
+        End Sub
+
+
         Public Shared Function FetchVideo(url As String) As YtVideo
             Dim ytUrl As New YtUrlDecoder()
             If String.IsNullOrEmpty(YtVideo.GetVideoId(url)) Then

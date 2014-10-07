@@ -1,4 +1,5 @@
 ﻿Imports System.Net
+Imports System.Reflection
 Imports ytDownloader.Extraction
 Imports ytDownloader.StringExtensions
 
@@ -42,15 +43,17 @@ Partial Public MustInherit Class Downloader
     ''' </summary>
     Public Property InputUrl As String
 
-    ''' <summary>
-    ''' Gets the number of bytes to download. <c>null</c>, if everything is downloaded.
-    ''' </summary>
-    Public Property BytesToDownload As Nullable(Of Integer) = Nothing
+    ' ''' <summary>
+    ' ''' Gets the number of bytes to download. <c>null</c>, if everything is downloaded.
+    ' ''' </summary>
+    'Public Property BytesToDownload As Nullable(Of Integer) = Nothing
+
 
     ''' <summary>
     ''' Gets the path to save the video/audio.
     ''' </summary>
     Public Property OutputPath As String
+  
 
     Private _doOptions As New DownloadOptions
     Public Property Options As DownloadOptions
@@ -87,7 +90,7 @@ Partial Public MustInherit Class Downloader
             Return _bInitialized
         End Get
     End Property
-    Public Sub SetInitialized(bInited As Boolean)
+    Private Sub SetInitialized(bInited As Boolean)
         _bInitialized = bInited
     End Sub
 
@@ -97,29 +100,59 @@ Partial Public MustInherit Class Downloader
 #Region "Construction"
     Public Sub New()
     End Sub
+    Sub New(url As String, ops As DownloadOptions, isPlaylist As Boolean)
+        InputUrl = url
+        IsPlaylistMember = isPlaylist
+        ops.CloneTo(Options)
+        Options.SetOnlyVideo(ops.OnlyVideo)
+    End Sub
+
     ''' <summary>
     ''' This should be called, only after the first element from the video list ha been fetched.
     ''' </summary>
-    ''' <returns></returns>
+    ''' <param name="dldr">The downloader to initialize.</param>
     ''' <remarks></remarks>
-    Public Function Initialize() As Downloader
-        _vCodec = Options.GetCodec(InputUrl)
-        _bInitialized = True
-        Return Factory.Create(_vCodec, Options, IsPlaylistMember)
-    End Function
-    Sub New(url As String, ops As DownloadOptions, isPlaylist As Boolean)
-        Me.InputUrl = url
-        Me.IsPlaylistMember = isPlaylist
-        ops.CloneTo(Me.Options)
-        Me.Options.SetOnlyVideo(ops.OnlyVideo)
-        'Me.Options.Format = ops.Format
-        'Me.Options.Quality = ops.Quality
-        'Me.Options.SizeLimit = ops.SizeLimit
-        'Me.Options.Output = ops.Output
-        'Me.Options.IsPlaylist = ops.IsPlaylist
-        'Me.Options.Filter = ops.Filter
-        'ops = Nothing
+    Public Shared Sub Initialize(ByRef dldr As Downloader)
+        dldr.VideoCodec = dldr.Options.GetCodec(dldr.InputUrl)
+        '   dldr = Factory.Create(dldr.VideoCodec, dldr.Options, dldr.IsPlaylistMember)
+        If dldr.Options.OnlyVideo Then
+            Factory(Of VideoDownloader).SetExtendor(dldr)
+        Else
+            Factory(Of AudioDownloader).SetExtendor(dldr)
+        End If
+        CorrectDownloaderPath(dldr)
     End Sub
+    Public Sub Initialize()
+        Initialize(Me)
+        CorrectDownloaderPath(Me)
+    End Sub
+    
+    Private Shared Sub CorrectDownloaderPath(ByRef dldr As Downloader)
+        If Not String.IsNullOrEmpty(dldr.OutputPath) Then
+            If System.IO.Directory.Exists(dldr.OutputPath) And Not dldr.OutputPath.EndsWith("\") Then
+                dldr.OutputPath &= "\"
+            End If
+        End If
+
+        If dldr.IsPlaylistMember Then
+            If Not String.IsNullOrEmpty(dldr.OutputPath) Then
+                If Not IO.Directory.Exists(dldr.OutputPath) Then
+                    IO.Directory.CreateDirectory(dldr.OutputPath)
+                End If
+            End If
+        End If
+
+        If Not String.IsNullOrEmpty(dldr.OutputPath) And dldr.IsPlaylistMember Then
+            If Not dldr.OutputPath.EndsWith("\") Then dldr.OutputPath &= "\"
+        End If
+        dldr.OutputPath = String.Format("{0}{1}", dldr.OutputPath, dldr.VideoCodec.Title.RemoveIllegalPathCharacters)
+        If TypeOf dldr Is AudioDownloader Then
+            dldr.OutputPath = IO.Path.ChangeExtension(dldr.OutputPath, dldr.VideoCodec.AudioExtension)
+        ElseIf TypeOf dldr Is VideoDownloader Then
+            dldr.OutputPath = IO.Path.ChangeExtension(dldr.OutputPath, dldr.VideoCodec.VideoExtension)
+        End If
+    End Sub
+
     Public Shared Function CreateEmpty(url As String, ops As DownloadOptions, isPlaylist As Boolean) As Downloader
         Dim dlm As Downloader = New VideoDownloader
         dlm.InputUrl = url
@@ -157,27 +190,7 @@ Partial Public MustInherit Class Downloader
     Protected MustOverride Sub StartDownloading()
 
     Public Sub Start()
-        If IsPlaylistMember Then
-            If Not String.IsNullOrEmpty(OutputPath) Then
-                If Not IO.Directory.Exists(OutputPath) Then
-                    IO.Directory.CreateDirectory(OutputPath)
-                End If
-            End If
-        End If
-
-        If String.IsNullOrEmpty(OutputPath) Or IsPlaylistMember Then
-            If Not String.IsNullOrEmpty(OutputPath) And IsPlaylistMember Then
-                If Not OutputPath.EndsWith("\") Then OutputPath &= "\"
-            End If
-            OutputPath = String.Format("{0}{1}", OutputPath, VideoCodec.Title.RemoveIllegalPathCharacters)
-            If TypeOf Me Is AudioDownloader Then
-                OutputPath = IO.Path.ChangeExtension(OutputPath, VideoCodec.AudioExtension)
-            ElseIf TypeOf Me Is VideoDownloader Then
-                OutputPath = IO.Path.ChangeExtension(OutputPath, VideoCodec.VideoExtension)
-            End If
-        End If
-
-
+        If Not Initialized Then Initialize(Me)
         StartDownloading()
     End Sub
     Public Overloads Async Sub StartAsync()
@@ -200,6 +213,30 @@ Partial Public MustInherit Class Downloader
         Dim wc As New WebClient()
         Return wc.DownloadData(url)
     End Function
+
+#Region "Cloning"
+
+    Public Function Clone() As Downloader
+        Dim res As Downloader = Nothing
+        CloneMembersTo(res)
+        Return res
+    End Function
+
+    Public Sub CloneMembersTo(ByRef dldr As Downloader)
+        If dldr Is Nothing Then
+            Dim initer As ConstructorInfo = Me.GetType.GetConstructor({})
+            dldr = initer.Invoke({})
+        End If
+        dldr.InputUrl = InputUrl
+        dldr.OutputPath = OutputPath
+        dldr.Options = Options
+        dldr.SetInitialized(Initialized)
+        dldr.IsPlaylistMember = IsPlaylistMember
+        dldr.UpdateInterval = UpdateInterval
+        dldr._updateDelta = _updateDelta
+    End Sub
+
+#End Region
 
 
 End Class

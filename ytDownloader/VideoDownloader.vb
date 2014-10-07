@@ -39,8 +39,8 @@ Public Class VideoDownloader
         request.KeepAlive = True
        
 
-        If Me.BytesToDownload > 0 Then
-            request.AddRange(0, Me.BytesToDownload.Value - 1)
+        If Options.SizeLimit > 0 Then
+            request.AddRange(0, Options.SizeLimit - 1)
         End If
 
         ' the following code is alternative, you may implement the function after your needs
