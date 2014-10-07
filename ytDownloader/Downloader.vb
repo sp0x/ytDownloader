@@ -157,6 +157,7 @@ Partial Public MustInherit Class Downloader
         Dim dlm As Downloader = New VideoDownloader
         dlm.InputUrl = url
         dlm.IsPlaylistMember = isPlaylist
+        dlm.OutputPath = ops.Output
         ops.CloneTo(dlm.Options)
         dlm.Options.SetOnlyVideo(ops.OnlyVideo)
         Return dlm
