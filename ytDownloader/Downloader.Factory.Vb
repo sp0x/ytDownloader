@@ -103,13 +103,14 @@ Partial Public Class Downloader
     End Class
 
     Public Class Factory(Of TDldType As {Downloader, New})
-        Public Shared Function Create(video As VideoCodecInfo, outputFile As String, Optional bytesToDownload As System.Nullable(Of Integer) = Nothing, _
-                                      Optional isPlaylsit As Boolean = False) As TDldType
+        Public Shared Function Create(video As VideoCodecInfo, outputFile As String, Optional bytesToDownload As Int32 = Nothing, _
+                                      Optional isPlaylsit As Boolean = False, Optional lazy As Boolean = False) As TDldType
             Dim dldr As Downloader = New TDldType
             dldr.Options = New DownloadOptions
             dldr.Options.SizeLimit = bytesToDownload
             dldr.OutputPath = outputFile
             dldr.VideoCodec = video
+            dldr.SetInitialized(True)
             Return dldr
         End Function
         ''' <summary>

@@ -4,6 +4,7 @@ Imports ytDownloader.Extraction
 Imports ytDownloader.StringExtensions
 
 
+
 ''' <summary>
 ''' Provides the base class for the <see cref="AudioDownloader"/> and <see cref="VideoDownloader"/> class.
 ''' </summary>
@@ -106,14 +107,18 @@ Partial Public MustInherit Class Downloader
         ops.CloneTo(Options)
         Options.SetOnlyVideo(ops.OnlyVideo)
     End Sub
+#End Region
+
+
+#Region "Init"
 
     ''' <summary>
     ''' This should be called, only after the first element from the video list ha been fetched.
     ''' </summary>
     ''' <param name="dldr">The downloader to initialize.</param>
     ''' <remarks></remarks>
-    Public Shared Sub Initialize(ByRef dldr As Downloader)
-        dldr.VideoCodec = dldr.Options.GetCodec(dldr.InputUrl)
+    Public Shared Function Initialize(ByRef dldr As Downloader) As Downloader
+        If dldr.VideoCodec Is Nothing Then dldr.VideoCodec = dldr.Options.GetCodec(dldr.InputUrl)
         '   dldr = Factory.Create(dldr.VideoCodec, dldr.Options, dldr.IsPlaylistMember)
         If dldr.Options.OnlyVideo Then
             Factory(Of VideoDownloader).SetExtendor(dldr)
@@ -121,12 +126,15 @@ Partial Public MustInherit Class Downloader
             Factory(Of AudioDownloader).SetExtendor(dldr)
         End If
         CorrectDownloaderPath(dldr)
-    End Sub
-    Public Sub Initialize()
-        Initialize(Me)
-        CorrectDownloaderPath(Me)
-    End Sub
-    
+        dldr.SetInitialized(True)
+        Return dldr
+    End Function
+    'Public Function Initialize() As Downloader
+    '    Initialize(Me)
+    '    CorrectDownloaderPath(Me)
+    '    Return Me
+    'End Function
+
     Private Shared Sub CorrectDownloaderPath(ByRef dldr As Downloader)
         If Not String.IsNullOrEmpty(dldr.OutputPath) Then
             If System.IO.Directory.Exists(dldr.OutputPath) And Not dldr.OutputPath.EndsWith("\") Then
@@ -191,7 +199,9 @@ Partial Public MustInherit Class Downloader
     Protected MustOverride Sub StartDownloading()
 
     Public Sub Start()
-        If Not Initialized Then Initialize(Me)
+        If Not Initialized Then
+            Throw New InvalidOperationException("Downloader not initialized.")
+        End If
         StartDownloading()
     End Sub
     Public Overloads Async Sub StartAsync()
