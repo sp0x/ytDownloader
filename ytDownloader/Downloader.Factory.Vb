@@ -126,6 +126,7 @@ Partial Public Class Downloader
         ''' <remarks></remarks>
         Public Shared Function ParseQuality(quality As String) As Int32
             Dim tmpQuality As Int32
+            If String.IsNullOrEmpty(quality) Then Return 0
             If quality.ToLower = "highest" Then
                 tmpQuality = Int32.MaxValue
             ElseIf quality.ToLower = "lowest" Then

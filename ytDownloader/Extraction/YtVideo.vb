@@ -11,7 +11,7 @@ Namespace Extraction
 
 
         Public Sub New(videoId As String, Optional bAvailable As Boolean = True)
-            Id = videoId
+            Id = GetVideoId(videoId)
             Available = bAvailable
         End Sub
 
@@ -41,6 +41,7 @@ Namespace Extraction
         End Function
 
         Public Shared Function GetVideoId(videoId As String) As String
+            If Not videoId.Contains("http://") And Not videoId.Contains("https://") Then Return videoId
             Return RxVideoId.MatchGroupValue(videoId, 2)
         End Function
         Public Shared Function GetVideoCoverUrl(videoUrl As String) As String
