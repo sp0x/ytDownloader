@@ -37,30 +37,10 @@ Public Class DownloadOptions
 #Region "Codec resolvers"
 
     Public Function GetCodec(videoId As String) As VideoCodecInfo
-        If videoId.Contains("http:") Or videoId.Contains("https:") Then
-            videoId = YtVideo.GetVideoId(videoId)
-            ' Throw New InvalidOperationException("VideoID must be specified, but videoURL has been passed! Please pass only VideoIDs.")
-        End If
-        If String.IsNullOrEmpty(videoId) Then
-            Throw New ArgumentNullException("videoId")
-        End If
         Return GetCodec(New YtVideo(videoId))
     End Function
-
     Public Function GetCodec(ByRef video As YtVideo) As VideoCodecInfo
-        If video.Codecs Is Nothing Then
-            video = Downloader.Factory(Of VideoDownloader).FetchVideo(video.ToString())
-        End If
-
-        Dim codec As VideoCodecInfo = Nothing
-        If Quality > -1 And Quality < Int32.MaxValue Then
-            codec = video.Codecs.FirstOrDefault(Filter)
-        ElseIf Quality = -1 Then
-            codec = video.Codecs.Where(Filter).OrderBy(Function(x) x.Resolution).FirstOrDefault
-        ElseIf Quality = Int32.MaxValue Then
-            codec = video.Codecs.Where(Filter).OrderByDescending(Function(x) x.Resolution).FirstOrDefault
-        End If
-
+        Dim codec As VideoCodecInfo = GetCodecs(video).FirstOrDefault
         If codec Is Nothing Then
             Throw New VideoNotAvailableException("Can't find a codec matching the parameters!")
         End If
@@ -69,6 +49,35 @@ Public Class DownloadOptions
         End If
         Return codec
     End Function
+
+    Public Function GetCodecs(videoId As String) As IEnumerable(Of VideoCodecInfo)
+        If videoId.Contains("http:") Or videoId.Contains("https:") Then
+            videoId = YtVideo.GetVideoId(videoId)
+            ' Throw New InvalidOperationException("VideoID must be specified, but videoURL has been passed! Please pass only VideoIDs.")
+        End If
+        If String.IsNullOrEmpty(videoId) Then
+            Throw New ArgumentNullException("videoId")
+        End If
+        Return GetCodecs(New YtVideo(videoId))
+    End Function
+    Public Function GetCodecs(ByRef video As YtVideo) As IEnumerable(Of VideoCodecInfo)
+        If video.Codecs Is Nothing Then
+            video = Downloader.Factory(Of VideoDownloader).FetchVideo(video.ToString())
+        End If
+        Dim codecs As IEnumerable(Of VideoCodecInfo) = Nothing
+        If Quality > -1 And Quality < Int32.MaxValue Then
+            codecs = video.Codecs.Where(Filter)
+        ElseIf Quality = -1 Then
+            codecs = video.Codecs.Where(Filter).OrderBy(Function(x) x.Resolution)
+        ElseIf Quality = Int32.MaxValue Then
+            codecs = video.Codecs.Where(Filter).OrderByDescending(Function(x) x.Resolution)
+        End If
+        If codecs Is Nothing Then
+            Throw New VideoNotAvailableException("Can't find a codec matching the parameters!")
+        End If
+        Return codecs
+    End Function
+
 #End Region
 
 #Region "Construction"

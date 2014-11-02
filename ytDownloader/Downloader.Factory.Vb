@@ -3,7 +3,14 @@
 Partial Public Class Downloader
     Public Class Factory
 
-
+        ''' <summary>
+        ''' Creates a new downloader.
+        ''' </summary>
+        ''' <param name="codec"></param>
+        ''' <param name="ops"></param>
+        ''' <param name="isPlaylist"></param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
         Public Shared Function Create(codec As VideoCodecInfo, ops As DownloadOptions, Optional isPlaylist As Boolean = False) As Downloader
             Dim downloader As Downloader
             ops.IsPlaylist = isPlaylist
@@ -27,7 +34,7 @@ Partial Public Class Downloader
             If lazy Then
                 result = Downloader.CreateEmpty(url, options, isPlaylist)
             Else
-                Dim codec As VideoCodecInfo = options.GetCodec(url)
+                Dim codec As VideoCodecInfo = options.GetCodecs(url)
                 result = Create(codec, options, isPlaylist)
             End If
             result.InputUrl = url
@@ -68,19 +75,30 @@ Partial Public Class Downloader
                                                                    onlyVideo, format, quality)
             ParseLink(link, dldOps, action)
         End Sub
+
+
         Public Shared Function CreateList(link As String, outputPath As String, onlyVideo As Boolean, _
                                   format As String, quality As Int32, Optional lazy As Boolean = True) As List(Of Downloader)
             Dim dldOps As DownloadOptions = DownloadOptionsBuilder.Build(outputPath, _
                                                                     onlyVideo, format, quality)
             Return ParseLink(link, dldOps, Nothing, lazy)
         End Function
-
+        ''' <summary>
+        ''' Parses a given link with it's options, and returns a list of downloaders.
+        ''' </summary>
+        ''' <param name="link">The link to the video or playlist</param>
+        ''' <param name="dldOps">Download options for codec selection</param>
+        ''' <param name="actionOnParse">Action to perform once fetched</param>
+        ''' <param name="lazy">Fetch codecs for every downloader, or fetch them later?</param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
         Private Shared Function ParseLink(link As String, dldOps As DownloadOptions, actionOnParse As Action(Of Downloader), _
                                           Optional lazy As Boolean = True) As IEnumerable(Of Downloader)
             Dim output As New List(Of Downloader)
             Dim dldr As Downloader = Nothing
             If YtPlaylist.IsPlaylist(link) Then
                 Dim ytl As New YtPlaylist(link, dldOps)
+                Console.WriteLine("Downloading playlist " + link)
                 For Each video As YtVideo In ytl
                     dldr = video.GetDownloader(ytl.DownloadOptions, True, lazy:=lazy) ' Lazy should be here, no preprocessing
 
@@ -99,6 +117,32 @@ Partial Public Class Downloader
                 End If
             End If
             Return output
+        End Function
+        ''' <summary>
+        ''' Parses a quality string into a valid integer, specifying the quality to select.
+        ''' </summary>
+        ''' <param name="quality">Quality string. You can also use highest,lowest.</param>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Public Shared Function ParseQuality(quality As String) As Int32
+            Dim tmpQuality As Int32
+            If quality.ToLower = "highest" Then
+                tmpQuality = Int32.MaxValue
+            ElseIf quality.ToLower = "lowest" Then
+                tmpQuality = -1
+            Else
+                tmpQuality = CInt(quality)
+            End If
+            Return tmpQuality
+        End Function
+
+        Public Shared Function TryParseQuality(ByRef quality As String) As Boolean
+            Try
+                quality = ParseQuality(quality)
+                Return True
+            Catch ex As Exception
+                Return False
+            End Try
         End Function
     End Class
 
