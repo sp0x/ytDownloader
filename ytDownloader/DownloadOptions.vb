@@ -36,8 +36,9 @@ Public Class DownloadOptions
 
 #Region "Codec resolvers"
 
-    Public Function GetCodec(videoId As String) As VideoCodecInfo
-        Return GetCodec(New YtVideo(videoId))
+    Public Function GetCodec(videoId As String, Optional ByRef video As YtVideo = Nothing) As VideoCodecInfo
+        video = New YtVideo(videoId)
+        Return GetCodec(video)
     End Function
     Public Function GetCodec(ByRef video As YtVideo) As VideoCodecInfo
         Dim codec As VideoCodecInfo = GetCodecs(video).FirstOrDefault

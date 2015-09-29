@@ -73,13 +73,14 @@ Partial Public MustInherit Class Downloader
         End Get
     End Property
     Private _vCodec As VideoCodecInfo
+    Public CurrentVideo As YtVideo
     ''' <summary>
     ''' Gets the video to download/convert.
     ''' </summary>
     Public Property VideoCodec As VideoCodecInfo
         Get
             If _vCodec Is Nothing Then
-                _vCodec = Options.GetCodec(InputUrl)
+                _vCodec = Options.GetCodec(InputUrl, CurrentVideo)
                 _bInitialized = True
             End If
             Return _vCodec
@@ -123,7 +124,7 @@ Partial Public MustInherit Class Downloader
     ''' <param name="dldr">The downloader to initialize.</param>
     ''' <remarks></remarks>
     Public Shared Function Initialize(ByRef dldr As Downloader) As Downloader
-        If Not dldr.CodecAvailable Then dldr.VideoCodec = dldr.Options.GetCodec(dldr.InputUrl)
+        If Not dldr.CodecAvailable Then dldr.VideoCodec = dldr.Options.GetCodec(dldr.InputUrl, dldr.CurrentVideo)
         '   dldr = Factory.Create(dldr.VideoCodec, dldr.Options, dldr.IsPlaylistMember)
         If dldr.Options.OnlyVideo Then
             Factory(Of VideoDownloader).SetExtendor(dldr)

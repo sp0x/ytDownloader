@@ -1,6 +1,7 @@
 ﻿Imports System.Text.RegularExpressions
 Imports System.Net
 Imports System.IO
+Imports System.Security.Cryptography
 
 Namespace Extraction
     Public Class YtPlaylistEnumerator
@@ -38,10 +39,21 @@ Namespace Extraction
         End Sub
 
         Private Function downloadPage(url As String) As String
+            If Not url.ToLower.StartsWith("https") Then
+                url = url.Replace("http://", "https://")
+            End If
             HttpClient = HttpWebRequest.Create(url)
             HttpClient.CookieContainer = Cookies
+            HttpClient.AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip
+
             HttpClient.Headers(HttpRequestHeader.AcceptEncoding) = "gzip, deflate"
-            Dim respStrm As stream = HttpClient.GetResponse.GetResponseStream
+            ServicePointManager.ServerCertificateValidationCallback = New System.Net.Security.RemoteCertificateValidationCallback(
+                Function()
+                    Return True
+                End Function)
+
+            Dim response = HttpClient.GetResponse()
+            Dim respStrm As Stream = response.GetResponseStream
             Return New StreamReader(respStrm).ReadToEnd()
         End Function
 
@@ -82,7 +94,7 @@ Namespace Extraction
             If String.IsNullOrEmpty(NextVideoId) Then
                 Return False
             Else
-                _ytvCurrent = New YtVideo(crVideoId) '
+                _ytvCurrent = New YtVideo(crVideoId, False, videoSrc) '
                 Return True
             End If
         End Function

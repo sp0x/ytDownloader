@@ -1,18 +1,121 @@
 ﻿Imports System.Collections.Generic
 Imports System.IO
 Imports ytDownloader.Extraction.VideoParsers
+Imports NAudio.Wave
+
 
 
 Namespace Extraction.AudioExtractors
+    Public Class MP3Cutter
+        Implements IDisposable
+        Private Property stream As FileStream
+        Private Property reader As Mp3FileReader
+        Private Property disposed As Boolean = False
+        Public Property OutputDirectory As String
+        Public Sub New(mp3File As String, outputDirectory As String)
+            stream = New FileStream(mp3File, FileMode.Open, FileAccess.Read, FileShare.Read)
+            Try
+                reader = New Mp3FileReader(stream)
+            Catch ex As Exception
+                Console.WriteLine(ex.Message)
+            End Try
+
+            Me.OutputDirectory = outputDirectory
+        End Sub
+
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="dictNameOffsetTime"></param>
+        ''' <returns></returns>
+        Public Function applyTimeDictionary(dictNameOffsetTime As Dictionary(Of String, String))
+            If String.IsNullOrEmpty(OutputDirectory) Then
+                OutputDirectory = Reflection.Assembly.GetEntryAssembly.Location
+                OutputDirectory = IO.Path.GetDirectoryName(OutputDirectory)
+            End If
+            Dim frame As NAudio.Wave.Mp3Frame = reader.ReadNextFrame()
+            Dim lastItem = False
+            For iChunk As Int16 = 0 To dictNameOffsetTime.Keys.Count - 1
+                Dim key As String = dictNameOffsetTime.Keys(iChunk)
+                If key Is Nothing Then Continue For
+                Dim value As String = dictNameOffsetTime(dictNameOffsetTime.Keys(iChunk))
+                Dim chunk = New KeyValuePair(Of String, String)(key, value)
+
+                If iChunk = (dictNameOffsetTime.Keys.Count - 1) Then
+                    lastItem = True
+                End If
+                Dim timeSplit As String() = Nothing
+                If dictNameOffsetTime.Keys.Count = 1 Then
+                    Continue For
+                Else
+                    If Not lastItem Then
+                        Dim nextKey = dictNameOffsetTime.Keys(iChunk + 1)
+                        If nextKey Is Nothing Then
+                            Continue For
+                        End If
+                        Dim nxChunk = New KeyValuePair(Of String, String)(nextKey, dictNameOffsetTime(dictNameOffsetTime.Keys(iChunk + 1)))
+                        timeSplit = nxChunk.Value.Split(":")
+                    End If
+
+                End If
+
+
+                Dim timeOffset = New TimeSpan
+                If Not lastItem Then timeOffset = New TimeSpan(CInt(If(timeSplit.Length > 2, timeSplit(0), 0)),
+                                              CInt(timeSplit(If(timeSplit.Length > 2, 1, 0))),
+                                              CInt(timeSplit.Last().ToString()))
+
+                Dim filename As String = Path.ChangeExtension(chunk.Key, "mp3")
+                Try
+                    Dim outputFileStream As FileStream = File.Create(Path.Combine(OutputDirectory, filename))
+
+                    While frame IsNot Nothing
+                        If (reader.CurrentTime.TotalSeconds >= timeOffset.TotalSeconds) And Not lastItem Then
+                            Console.WriteLine(String.Format("Cut {0} at {1} - {2} ", timeOffset.ToString(), reader.CurrentTime.ToString(), filename))
+                            'We need to switch to the next file
+                            If outputFileStream IsNot Nothing Then outputFileStream.Close()
+                            Continue For
+                        Else
+                            outputFileStream.Write(frame.RawData, 0, frame.RawData.Length)
+                            frame = reader.ReadNextFrame()
+                        End If
+
+                    End While
+                    If lastItem Then
+                        If outputFileStream IsNot Nothing Then outputFileStream.Close()
+                    End If
+
+                Catch ex As Exception
+                    Console.WriteLine(ex.Message)
+                    Return False
+                End Try
+
+            Next
+            Return True
+        End Function
+
+
+        Public Sub Dispose() Implements IDisposable.Dispose
+            If disposed Then Return
+            If reader IsNot Nothing And stream IsNot Nothing Then
+                Try
+                    stream.Close()
+                    reader.Dispose()
+                Catch ex As Exception
+
+                End Try
+            End If
+        End Sub
+    End Class
     Friend Class Mp3AudioExtractor
         Inherits AudioChannelExtractor
 
 #Region "Static variables"
-        Shared ReadOnly Mpeg1BitRate As Integer() = New Int32() {0, 32, 40, 48, 56, 64, _
-             80, 96, 112, 128, 160, 192, _
+        Shared ReadOnly Mpeg1BitRate As Integer() = New Int32() {0, 32, 40, 48, 56, 64,
+             80, 96, 112, 128, 160, 192,
              224, 256, 320, 0}
-        Shared ReadOnly Mpeg2XBitRate As Integer() = New Int32() {0, 8, 16, 24, 32, 40, _
-                48, 56, 64, 80, 96, 112, _
+        Shared ReadOnly Mpeg2XBitRate As Integer() = New Int32() {0, 8, 16, 24, 32, 40,
+                48, 56, 64, 80, 96, 112,
                 128, 144, 160, 0}
         Shared ReadOnly Mpeg1SampleRate As Integer() = New Int32() {44100, 48000, 32000, 0}
         Shared ReadOnly Mpeg20SampleRate As Integer() = New Int32() {22050, 24000, 16000, 0}
@@ -24,7 +127,7 @@ Namespace Extraction.AudioExtractors
         Private ls_warnings As List(Of String)
         Private _hasVbrHeader As Boolean
         Private _isVbr As Boolean
-        Private FrameInfo As New Mp3Frame
+        Private FrameInfo As New Mp3BasicFrame
         Private _totalFrameLength As UInteger
         Private _doWriteVbrHeader As Boolean
         Private _delayWrite As Boolean
@@ -89,7 +192,7 @@ Namespace Extraction.AudioExtractors
         ''' <param name="channelMode"></param>
         ''' <param name="sampleRate"></param>
         ''' <remarks></remarks>
-        Private Sub getMp3FrameInfo(ByRef header As ULong, ByRef mpegVersion As Int32, ByRef layer As Int32, ByRef bitrate As Int32, ByRef padding As Int32, _
+        Private Sub getMp3FrameInfo(ByRef header As ULong, ByRef mpegVersion As Int32, ByRef layer As Int32, ByRef bitrate As Int32, ByRef padding As Int32,
                                     ByRef channelMode As Int32, ByRef sampleRate As Int32)
             mpegVersion = BitHelper.Read(header, 2)
             layer = BitHelper.Read(header, 2)
@@ -110,11 +213,11 @@ Namespace Extraction.AudioExtractors
         Private Shared Sub calcSampleRate(mpgVersion As Int32, ByRef sampleRate As Int32)
             Select Case mpgVersion
                 Case 2
-                    sampleRate = mpeg20SampleRate(sampleRate)
+                    sampleRate = Mpeg20SampleRate(sampleRate)
                 Case 3
-                    sampleRate = mpeg1SampleRate(sampleRate)
+                    sampleRate = Mpeg1SampleRate(sampleRate)
                 Case Else
-                    sampleRate = mpeg25SampleRate(sampleRate)
+                    sampleRate = Mpeg25SampleRate(sampleRate)
             End Select
         End Sub
         ''' <summary>
@@ -166,7 +269,7 @@ Namespace Extraction.AudioExtractors
                     Exit While
                 End If
 
-                bitRate = (If(mpegVersion = 3, mpeg1BitRate(bitRate), mpeg2XBitRate(bitRate))) * 1000
+                bitRate = (If(mpegVersion = 3, Mpeg1BitRate(bitRate), Mpeg2XBitRate(bitRate))) * 1000
                 calcSampleRate(mpegVersion, sampleRate)
                 Dim frameLenght As Integer = GetFrameLength(mpegVersion, bitRate, sampleRate, padding)
                 If frameLenght > length Then
@@ -184,7 +287,7 @@ Namespace Extraction.AudioExtractors
             Me._totalFrameLength += bFrame.Length
         End Sub
 
-        Private Shared Sub ParseHeaderInformation(ByRef mp3Extractor As Mp3AudioExtractor, _
+        Private Shared Sub ParseHeaderInformation(ByRef mp3Extractor As Mp3AudioExtractor,
                                                   offset As Int32, buffer As Byte(), bitrate As Int32, mpegVer As Int32, sampleRate As Int32, channelMode As Int32)
             Dim isVbrHeaderFrame As Boolean = checkForVBRHeader(buffer, mp3Extractor.frameOffsets, offset, mpegVer, channelMode, mp3Extractor)
             If Not isVbrHeaderFrame Then

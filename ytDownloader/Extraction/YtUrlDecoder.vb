@@ -80,7 +80,8 @@ Namespace Extraction
             End If
 
             Try
-                Dim json = LoadYTPlayerJson(videoUrl)
+                Dim pageSource As String = ""
+                Dim json = LoadYTPlayerJson(videoUrl, pageSource)
                 Dim videoTitle As String = GetVideoTitle(json)
                 Dim downloadUrls As IEnumerable(Of ExtractionInfo) = ExtractDownloadUrls(json)
                 Dim infos As IEnumerable(Of VideoCodecInfo) = GetVideoInfos(downloadUrls, videoTitle).ToList()
@@ -91,7 +92,7 @@ Namespace Extraction
                         DecryptDownloadUrl(info)
                     End If
                 Next
-                Return New YtVideo(id) With {.Codecs = infos}
+                Return New YtVideo(id, True, pageSource) With {.Codecs = infos}
             Catch ex As Exception
                 If (TypeOf ex Is WebException Or TypeOf ex Is VideoNotAvailableException) Then
                     Throw New Exception
@@ -256,7 +257,7 @@ End Function
             Return pageSource.Contains(unavailableContainer)
         End Function
 
-        Private Shared Function LoadYTPlayerJson(url As String, Optional pageSource As String = Nothing) As JObject
+        Private Shared Function LoadYTPlayerJson(url As String, Optional ByRef pageSource As String = Nothing) As JObject
             If String.IsNullOrEmpty(pageSource) Then
                 pageSource = New WebClient() With {.Encoding = UTF8}.DownloadString(url) 'URLHelper.DldurlTxt(url, UTF8)
             End If

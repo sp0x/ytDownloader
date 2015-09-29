@@ -39,9 +39,10 @@ Public Class DownloadOptionsBuilder
                            End If
                            validCount += 1
                        End If
-                       If vCodec.VideoExtension.Substring(1).ToLower = format.ToLower And onlyVideoBk Then
-                           validCount += 1
+                       If Not nonVideoFormat(format.ToLower) And onlyVideoBk Then
+                           validCount += Math.Abs(CInt(vCodec.VideoExtension.Substring(1).ToLower = format.ToLower))
                        End If
+                       validCount += Math.Abs(CInt(onlyVideoBk))
                        validsNeeded += 1
 
                    ElseIf (quality > 0) Then
@@ -58,5 +59,9 @@ Public Class DownloadOptionsBuilder
 
                    Return (validsNeeded > 0 AndAlso validCount = validsNeeded)
                End Function
+    End Function
+
+    Private Shared Function nonVideoFormat(formatStr As String) As Boolean
+        Return {"mp3", "ogg", "acc"}.Contains(formatStr)
     End Function
 End Class
