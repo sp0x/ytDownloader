@@ -76,23 +76,31 @@ Partial Public Class Downloader
             ParseLink(link, dldOps, action)
         End Sub
 
+        Public shared sub  ExecuteList(link As String, video As VideoModel, action As Action(Of Downloader), actionOnNextLoading As Func(Of String, Action(Of action)))
+             Dim dldOps As DownloadOptions = DownloadOptionsBuilder.Build(video.Options.OutputPath , _
+                                                                   video.Options.OnlyVideo , video.Options.Format, video.Options.Quality )
+            ParseLink(link, dldOps, action, actionOnNextLoading)
+        End sub
+
 
         Public Shared Function CreateList(link As String, outputPath As String, onlyVideo As Boolean, _
                                   format As String, quality As Int32, Optional lazy As Boolean = True) As List(Of Downloader)
             Dim dldOps As DownloadOptions = DownloadOptionsBuilder.Build(outputPath, _
                                                                     onlyVideo, format, quality)
-            Return ParseLink(link, dldOps, Nothing, lazy)
+            Return ParseLink(link, dldOps, Nothing, Nothing, lazy)
         End Function
         ''' <summary>
         ''' Parses a given link with it's options, and returns a list of downloaders.
         ''' </summary>
         ''' <param name="link">The link to the video or playlist</param>
         ''' <param name="dldOps">Download options for codec selection</param>
-        ''' <param name="actionOnParse">Action to perform once fetched</param>
+        ''' <param name="actionOnParse">Action to perform once next video is fetched</param>
         ''' <param name="lazy">Fetch codecs for every downloader, or fetch them later?</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Private Shared Function ParseLink(link As String, dldOps As DownloadOptions, actionOnParse As Action(Of Downloader), _
+        Private Shared Function ParseLink(link As String, dldOps As DownloadOptions, 
+                                          actionOnParse As Action(Of Downloader), _
+                                          optional actionOnNextLoading As Func(Of String, Action(of Action)) = Nothing , _
                                           Optional lazy As Boolean = True) As IEnumerable(Of Downloader)
             Dim output As New List(Of Downloader)
             Dim dldr As Downloader = Nothing
@@ -100,13 +108,33 @@ Partial Public Class Downloader
                 Dim ytl As New YtPlaylist(link, dldOps)
                 Console.WriteLine("Downloading playlist " + link)
                 For Each video As YtVideo In ytl
-                    dldr = video.GetDownloader(ytl.DownloadOptions, True, lazy:=lazy) ' Lazy should be here, no preprocessing
-
-                    If actionOnParse IsNot Nothing Then
-                        actionOnParse(dldr)
-                    Else
-                        output.Add(dldr)
+                    If(ytl Is Nothing) Then Continue For
+                    Dim ack As Action(of Action) = Nothing 
+                    Dim processNext = Sub(videoX As YtVideo )
+                                          dldr = videoX.GetDownloader(ytl.DownloadOptions, True, lazy:=lazy) ' Lazy should be here, no preprocessing
+                                          If actionOnParse IsNot Nothing Then
+                                                actionOnParse(dldr)
+                                          Else
+                                                output.Add(dldr)
+                                          End If
+                                      End Sub
+                    'Added ACKing capabilities for playlist control and lazy loading of the list, or partial loading
+                    if actionOnNextLoading IsNot Nothing then 
+                        'If ack isnot null, then the loading of the next video (linking from 1->2->...->n) should be ACK-ed
+                        ack = actionOnNextLoading(video.Id) 
                     End If
+
+                    If ack IsNot Nothing Then
+                        Dim currentvideo = video 'Closure
+                        'When it's ACKed, launch the download
+                        ack(Sub()
+                                processNext(currentvideo)
+                            End Sub)
+                    Else
+                        processNext(video)
+                    End If
+
+                    
                 Next
             Else
                 dldr = (Downloader.Factory.Create(link, dldOps, lazy:=lazy))

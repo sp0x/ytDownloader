@@ -54,8 +54,8 @@ Namespace Extraction
             AdaptiveType.Video), _
           New VideoCodecInfo(136, VideoType.Mp4, 720, False, AudioType.Unknown, 0, _
             AdaptiveType.Video), _
-          New VideoCodecInfo(137, VideoType.Mp4, 1080, False, AudioType.Unknown, 0, _
-            AdaptiveType.Video), _
+          New VideoCodecInfo(137, VideoType.Mp4, 1080, False, AudioType.Unknown, 0, AdaptiveType.Video), _
+          new VideoCodecInfo(138, VideoType.Mp4, 2160, false, AudioType.Unknown, 0, AdaptiveType.Video),
           New VideoCodecInfo(160, VideoType.Mp4, 144, False, AudioType.Unknown, 0, _
             AdaptiveType.Video), _
           New VideoCodecInfo(242, VideoType.WebM, 240, False, AudioType.Unknown, 0, _
@@ -68,8 +68,9 @@ Namespace Extraction
             AdaptiveType.Video), _
           New VideoCodecInfo(248, VideoType.WebM, 1080, False, AudioType.Unknown, 0, _
             AdaptiveType.Video), _
-          New VideoCodecInfo(264, VideoType.Mp4, 1440, False, AudioType.Unknown, 0, _
-            AdaptiveType.Video), _
+          New VideoCodecInfo(264, VideoType.Mp4, 1440, False, AudioType.Unknown, 0, AdaptiveType.Video), _
+          new VideoCodecInfo(271, VideoType.WebM, 1440, false, AudioType.Unknown, 0, AdaptiveType.Video),
+          new VideoCodecInfo(272, VideoType.WebM, 2160, false, AudioType.Unknown, 0, AdaptiveType.Video),
           New VideoCodecInfo(278, VideoType.WebM, 144, False, AudioType.Unknown, 0, _
             AdaptiveType.Video), _
           New VideoCodecInfo(139, VideoType.Mp4, 0, False, AudioType.Aac, 48, _

@@ -60,10 +60,18 @@ Friend Class URLHelper
         End If
 
         Dim dictionary As New Dictionary(Of String, String)()
-
+        Dim value As String = String.Empty 
         For Each vp As String In Regex.Split(s, "&")
             Dim strings As String() = Regex.Split(vp, "=")
-            dictionary.Add(strings(0), If(strings.Length = 2, HtmlDecoder.Decode(strings(1)), String.Empty))
+            If(strings.Length >= 2)Then
+                'Fix problems with hashtags
+                If strings(1).Contains("#") Then strings(1) = strings(1).Substring(0, strings(1).IndexOf("#"))
+                value = HtmlDecoder.Decode(strings(1))
+
+            Else
+                value = String.Empty
+            End If
+            dictionary.Add(strings(0), value)
         Next
 
         Return dictionary

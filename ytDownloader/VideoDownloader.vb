@@ -44,34 +44,50 @@ Public Class VideoDownloader
         End If
 
         ' the following code is alternative, you may implement the function after your needs
-        Using response As WebResponse = request.GetResponse()
-            Using source As Stream = response.GetResponseStream()
-                Using target As FileStream = File.Open(Me.OutputPath, FileMode.Create, FileAccess.Write)
-                    Dim buffer As Byte() = New Byte(DownloadChunkSize) {}
-                    Dim cancel As Boolean = False
-                    Dim bytes As Integer
-                    Dim copiedBytes As Integer = 0
-                    Dim argUpdate As New ProgressEventArgs(0)
-                    argUpdate.Flag = ProgressFlags.Download
-                    bytes = source.Read(buffer, 0, buffer.Length)
-                    While Not cancel AndAlso bytes > 0
-                        target.Write(buffer, 0, bytes)
-                        copiedBytes += bytes
-                        argUpdate.ProgressPercentage = (copiedBytes * 1.0 / response.ContentLength) * 100
-                        If IsUpdateReady(argUpdate) Then
-                            RaiseEvent DownloadProgressChanged(Me, argUpdate)
-                            MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
-                            cancel = argUpdate.Cancel
-                        End If
-                        If source.CanRead Then
-                            bytes = source.Read(buffer, 0, buffer.Length)
-                        Else
-                            bytes = 0
-                        End If
-                    End While
+        Try
+             Using response As WebResponse = request.GetResponse()
+                Dim resSize = response.ContentLength
+                If(File.Exists(OutputPath)) then
+                     Dim finfo = New FileInfo(OutputPath)
+                     ''For now we wont implement a hash check
+                     If(finfo.Length = resSize )
+                        MyBase.RaiseDownloadFinished(Me, New IoFinishedEventArgs() With {.Path = Me.OutputPath})
+                        Return 
+                     End If
+                End If
+                Using source As Stream = response.GetResponseStream()
+                    Using target As FileStream = File.Open(Me.OutputPath, FileMode.Create, FileAccess.Write)
+                        Dim buffer As Byte() = New Byte(DownloadChunkSize) {}
+                        Dim cancel As Boolean = False
+                        Dim bytes As Integer
+                        Dim copiedBytes As Integer = 0
+                        Dim argUpdate As New ProgressEventArgs(0)
+                        argUpdate.Flag = ProgressFlags.Download
+                        bytes = source.Read(buffer, 0, buffer.Length)
+                        While Not cancel AndAlso bytes > 0
+                            target.Write(buffer, 0, bytes)
+                            copiedBytes += bytes
+                            argUpdate.ProgressPercentage = (copiedBytes * 1.0 / response.ContentLength) * 100
+                            If IsUpdateReady(argUpdate) Then
+                                RaiseEvent DownloadProgressChanged(Me, argUpdate)
+                                MyBase.RaiseDownloadProgressChanged(Me, argUpdate)
+                                cancel = argUpdate.Cancel
+                            End If
+                            If source.CanRead Then
+                                bytes = source.Read(buffer, 0, buffer.Length)
+                            Else
+                                bytes = 0
+                            End If
+                        End While
+                    End Using
                 End Using
             End Using
-        End Using
+        Catch ex As Exception
+            ex = ex 
+            if ex IsNot Nothing Then Throw ex 
+        End Try
+       
+
         MyBase.RaiseDownloadFinished(Me, New IoFinishedEventArgs() With {.Path = Me.OutputPath})
     End Sub
 End Class

@@ -47,6 +47,20 @@ Namespace Extraction
             End If
         End Sub
 
+        Public shared sub PopulateVideoInfo(videoUrl As String, byref video As YtVideo)
+            Dim json = LoadYTPlayerJson(videoUrl, "")
+            Dim videoTitle As String = GetVideoTitle(json)
+            Dim videoAuthor = GetVideoAuthor(json)
+            Dim videoViews = GetVideoViewCOunt(json)
+            Dim timestamp = GetVideoTimestamp(json) 
+            If video Is Nothing then video = new YtVideo(videoUrl)
+            video.Name = videoTitle
+            video.Author = videoAuthor 
+            video.ViewCount = videoViews 
+            video.Added = timestamp
+        End sub
+
+
       ''' <summary>
         ''' Gets a list of <see cref="VideoCodecInfo" />s for the specified URL.
         ''' </summary>
@@ -83,6 +97,9 @@ Namespace Extraction
                 Dim pageSource As String = ""
                 Dim json = LoadYTPlayerJson(videoUrl, pageSource)
                 Dim videoTitle As String = GetVideoTitle(json)
+                Dim videoAuthor = GetVideoAuthor(json)
+                Dim videoViews = GetVideoViewCOunt(json)
+                Dim timestamp = GetVideoTimestamp(json)
                 Dim downloadUrls As IEnumerable(Of ExtractionInfo) = ExtractDownloadUrls(json)
                 Dim infos As IEnumerable(Of VideoCodecInfo) = GetVideoInfos(downloadUrls, videoTitle).ToList()
                 Dim htmlPlayerVersion As String = GetHtml5PlayerVersion(json)
@@ -92,7 +109,7 @@ Namespace Extraction
                         DecryptDownloadUrl(info)
                     End If
                 Next
-                Return New YtVideo(id, True, pageSource) With {.Codecs = infos}
+                Return New YtVideo(id, True, pageSource) With {.Codecs = infos , .Name = videoTitle,  .Author = videoAuthor, .ViewCount = videoViews, .Added = timestamp}
             Catch ex As Exception
                 If (TypeOf ex Is WebException Or TypeOf ex Is VideoNotAvailableException) Then
                     Throw New Exception
@@ -203,13 +220,18 @@ End Function
             Else
                 ytDecoder = New YtSignitureDecoder(htmlPlayerVersion)
             End If
-            Return ytDecoder.DecipherWithVersion(signature)
+            Return ytDecoder.DecipherWithVersion(signature, htmlPlayerVersion )
         End Function
 
         Private Shared Function GetHtml5PlayerVersion(json As JObject) As String
-            Dim regex As New Regex("html5player-(.+?)\.js")
+            Dim regex As New Regex("player-(.+?)\.js")'  Regex("html5player-(.+?)\.js")
+            'player-(.+?)\.js
             Dim js As String = json("assets")("js").ToString()
-            Return regex.Match(js).Result("$1")
+            Try
+                Return regex.Match(js).Result("$1")
+            Catch ex As Exception
+                Return Nothing
+            End Try
         End Function
 
         Private Shared Function GetStreamMap(json As JObject) As String
@@ -251,7 +273,18 @@ End Function
             Dim title As JToken = json("args")("title")
             Return If(title Is Nothing, "", title.ToString())
         End Function
-
+        Private Shared Function GetVideoAuthor(json As JObject) As String
+            Dim title As JToken = json("args")("author")
+            Return If(title Is Nothing, "", title.ToString())
+        End Function
+         Private Shared Function GetVideoViewCOunt(json As JObject) As String
+            Dim title As JToken = json("args")("view_count")
+            Return Cint(If(title Is Nothing, 0, title.ToString()))
+        End Function
+         Private Shared Function GetVideoTimestamp(json As JObject) As String
+            Dim title As JToken = json("args")("timestamp")
+            Return If(title Is Nothing, "", title.ToString())
+        End Function 
         Public Shared Function IsVideoUnavailable(pageSource As String) As Boolean
             Const unavailableContainer As String = "<div id=\""watch-player-unavailable\"">"""
             Return pageSource.Contains(unavailableContainer)
@@ -259,6 +292,7 @@ End Function
 
         Private Shared Function LoadYTPlayerJson(url As String, Optional ByRef pageSource As String = Nothing) As JObject
             If String.IsNullOrEmpty(pageSource) Then
+                url = YtVideo.ToUrl(url)
                 pageSource = New WebClient() With {.Encoding = UTF8}.DownloadString(url) 'URLHelper.DldurlTxt(url, UTF8)
             End If
             If String.IsNullOrEmpty(pageSource) Then

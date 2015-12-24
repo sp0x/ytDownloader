@@ -7,20 +7,52 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ytDownloader", "ytDownloade
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ytcl", "..\ytcl\ytcl.vbproj", "{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tempera", "C:\Users\Sp0x\Documents\Arduino\tempera\tempera.vcxproj", "{03CFC02B-ACB6-4E40-876B-202EE3401501}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|x64.Build.0 = Debug|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Debug|x86.Build.0 = Debug|Any CPU
 		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|x64.ActiveCfg = Release|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|x64.Build.0 = Release|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|x86.ActiveCfg = Release|Any CPU
+		{B9321BAF-C6D3-4448-A08F-0685D179FF1C}.Release|x86.Build.0 = Release|Any CPU
 		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|x64.Build.0 = Debug|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Debug|x86.Build.0 = Debug|Any CPU
 		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|x64.ActiveCfg = Release|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|x64.Build.0 = Release|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|x86.ActiveCfg = Release|Any CPU
+		{1CA9EF7D-F78C-43D9-B42E-941510F8E28F}.Release|x86.Build.0 = Release|Any CPU
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Debug|x64.ActiveCfg = Debug|x64
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Debug|x64.Build.0 = Debug|x64
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Debug|x86.ActiveCfg = Debug|Win32
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Debug|x86.Build.0 = Debug|Win32
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Release|Any CPU.ActiveCfg = Release|Win32
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Release|x64.ActiveCfg = Release|x64
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Release|x64.Build.0 = Release|x64
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Release|x86.ActiveCfg = Release|Win32
+		{03CFC02B-ACB6-4E40-876B-202EE3401501}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

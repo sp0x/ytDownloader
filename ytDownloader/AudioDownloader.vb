@@ -42,6 +42,10 @@ Public Class AudioDownloader
     ''' <exception cref="WebException">An error occured while downloading the video.</exception>
     Protected Overrides Sub StartDownloading()
         Dim tempPath As String = Path.GetTempFileName()
+        Dim tempPathOpt = GetStoragePath("video_storage")
+        Dim filename = Path.GetFileNameWithoutExtension(OutputPath)
+        If tempPathOpt IsNot Nothing then tempPath = Path.combine(tempPathOpt , filename & ".tmp")
+        'Remplace tempPath with video storage directory which is frequently emptied, but provides caching
         Me.DownloadVideo(tempPath)
         If Not Me._isCanceled Then
             Me.ExtractAudio(tempPath)

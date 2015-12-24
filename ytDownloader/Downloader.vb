@@ -1,4 +1,5 @@
-﻿Imports System.Net
+﻿Imports System.IO
+Imports System.Net
 Imports System.Reflection
 Imports ytDownloader.Extraction
 Imports ytDownloader.StringExtensions
@@ -67,6 +68,17 @@ Partial Public MustInherit Class Downloader
         End Set
     End Property
 
+    Public property Paths As Dictionary(Of String, String)
+    Public function GetStoragePath(type As String)
+        If Paths Is Nothing Then 
+            Paths  = New Dictionary(Of String, String)()
+            Return Nothing 
+        End If
+        Dim val = Paths(type)
+        Return If(Directory.Exists(val), val , nothing)
+    End function
+
+
     Public ReadOnly Property CodecAvailable As Boolean
         Get
             Return _vCodec IsNot Nothing
@@ -106,8 +118,10 @@ Partial Public MustInherit Class Downloader
 
 #Region "Construction"
     Public Sub New()
+         Paths  = New Dictionary(Of String, String)()
     End Sub
     Sub New(url As String, ops As DownloadOptions, isPlaylist As Boolean)
+        Me.New()
         InputUrl = url
         IsPlaylistMember = isPlaylist
         ops.CloneTo(Options)

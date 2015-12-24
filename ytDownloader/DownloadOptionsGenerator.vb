@@ -10,6 +10,8 @@ Public Class DownloadOptionsBuilder
 
         Dim tmpQual As Int32 = quality
         If quality = -1 Or quality = Int32.MaxValue Then tmpQual = 0
+        ' Build the function which selects the most appropriate codec
+        '
         resOptions.Filter = CompileCodecSelector(onlyvideo, format, tmpQual)
         Return resOptions
     End Function
